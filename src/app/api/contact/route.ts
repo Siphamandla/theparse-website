@@ -4,14 +4,10 @@ import sendEmail from "@/lib/sendgrid"; // Ensure named export is correct
 
 export async function POST(request: Request) {
   try {
-    console.log('📧 [Contact API] Received contact form submission');
-    
     const body = await request.json();
     const { email, name, message, products } = body;
-    
-    console.log('📧 [Contact API] Form data:', { name, email, bodyKeys: Object.keys(body) });
 
-    const client = await clientPromise;  // Await the MongoDB client connection
+    const client = await clientPromise;
     const db = client.db('theParse');
     const collection = db.collection('contacts-us');
 
@@ -19,29 +15,18 @@ export async function POST(request: Request) {
     const existingUser = await collection.findOne({ email });
 
     if (existingUser) {
-      // Return an error response if the email is already in use
-      console.log('📧 [Contact API] Email already exists in database:', email);
       return NextResponse.json({ message: 'Email already exists' }, { status: 400 });
     }
 
     // Insert form data into MongoDB if no duplicate email is found
-    console.log('📧 [Contact API] Inserting contact into MongoDB...');
     const result = await collection.insertOne(body);
-    console.log('📧 [Contact API] MongoDB insert successful, ID:', result.insertedId);
+    console.log('✅ [Contact] New submission received');
 
     // Send email to company admin with all form details
-    console.log('📧 [Contact API] Preparing to send email to company admin...');
-    
     const adminEmail = process.env.THEPARSE_CONTACTUS_BCC || process.env.ADMIN_EMAIL;
     if (!adminEmail) {
       throw new Error('No admin email configured');
     }
-    
-    console.log('📧 [Contact API] Email config:', {
-      to: adminEmail,
-      fromUser: { name, email },
-      productsSelected: products,
-    });
     
     const emailResponse = await sendEmail({
       to: adminEmail,
@@ -51,17 +36,8 @@ export async function POST(request: Request) {
       plainTextContent: generatePlainTextEmail({ name, email, message, products }),
       htmlContent: generateHtmlEmail({ name, email, message, products }),
     });
-    
-    console.log('📧 [Contact API] Email send response:', emailResponse);
-    
-    if (!emailResponse.success) {
-      console.error('❌ [Contact API] Admin email failed:', emailResponse.message);
-      // Don't throw - continue to send user confirmation even if admin email fails
-    }
 
     // Send confirmation email to user
-    console.log('📧 [Contact API] Preparing to send confirmation email to user...');
-    
     const userConfirmationResponse = await sendEmail({
       to: email,
       cc: "",
@@ -70,22 +46,11 @@ export async function POST(request: Request) {
       plainTextContent: generateUserConfirmationEmail({ name, submissionId: result.insertedId.toString() }),
       htmlContent: generateUserConfirmationHtmlEmail({ name, submissionId: result.insertedId.toString() }),
     });
-    
-    console.log('📧 [Contact API] User confirmation email response:', userConfirmationResponse);
-    
-    if (!userConfirmationResponse.success) {
-      console.error('❌ [Contact API] User confirmation email failed:', userConfirmationResponse.message);
-    }
 
     // Return a success response
-    console.log('📧 [Contact API] Form submission completed successfully');
     return NextResponse.json({ message: 'Form submitted successfully', result });
   } catch (error) {
-    console.error('❌ [Contact API] Error submitting form:', error);
-    if (error instanceof Error) {
-      console.error('❌ [Contact API] Error message:', error.message);
-      console.error('❌ [Contact API] Error stack:', error.stack);
-    }
+    console.error('❌ [Contact] Error:', error instanceof Error ? error.message : error);
     return NextResponse.json({ message: 'Error submitting form', error }, { status: 500 });
   }
 }

@@ -23,18 +23,11 @@ async function sendEmail({
   templateId?: string;
 }): Promise<{ success: boolean; message: string }> {
   try {
-    console.log('📧 [SendGrid] Starting email send process...');
-    
     // Ensure the Admin Email is set in environment variables
     if (!process.env.ADMIN_EMAIL) {
       console.error('❌ [SendGrid] ADMIN_EMAIL environment variable not set');
       throw new Error("Admin Email must be set as env var ADMIN_EMAIL");
     }
-    
-    console.log('📧 [SendGrid] Admin email configured:', process.env.ADMIN_EMAIL);
-    console.log('📧 [SendGrid] API Key set:', !!process.env.SENDGRID_API_KEY);
-    console.log('📧 [SendGrid] Using template:', templateId ? 'Yes' : 'No');
-    console.log('📧 [SendGrid] Subject:', subject || 'N/A');
 
     let emailPayload: any = {
       from: process.env.ADMIN_EMAIL,
@@ -46,7 +39,6 @@ async function sendEmail({
 
     // Use template-based email if templateId is provided
     if (templateId && dynamicTemplateData) {
-      console.log('📧 [SendGrid] Sending template-based email');
       emailPayload = {
         ...emailPayload,
         templateId,
@@ -63,7 +55,6 @@ async function sendEmail({
       };
     } else if (subject && (plainTextContent || htmlContent)) {
       // Use direct email content
-      console.log('📧 [SendGrid] Sending direct content email');
       emailPayload = {
         from: process.env.ADMIN_EMAIL,
         replyTo: process.env.ADMIN_EMAIL,
@@ -78,37 +69,19 @@ async function sendEmail({
     } else {
       throw new Error('Either templateId with dynamicTemplateData or subject with content must be provided');
     }
-    
-    // Build log object with only defined values
-    const logPayload: any = {
-      from: emailPayload.from,
-      to: emailPayload.to,
-    };
-    if (emailPayload.cc) logPayload.cc = emailPayload.cc;
-    if (emailPayload.bcc) logPayload.bcc = emailPayload.bcc;
-    if (emailPayload.subject) logPayload.subject = emailPayload.subject;
-    if (emailPayload.templateId) logPayload.templateId = emailPayload.templateId;
-    if (emailPayload.html) logPayload.hasHtml = true;
-    if (emailPayload.text) logPayload.hasText = true;
-    
-    console.log('📧 [SendGrid] Email payload:', logPayload);
 
     // Send the email using SendGrid
     const response = await sendgrid.send(emailPayload);
     
-    console.log('✅ [SendGrid] Email sent successfully');
-    console.log('📧 [SendGrid] Response status:', response[0].statusCode);
-    console.log('📧 [SendGrid] Message ID:', response[0].headers['x-message-id']);
+    console.log('✅ [Email] Sent successfully');
 
     return { success: true, message: "Email Sent" };
   } catch (error: any) {
-    console.error("❌ [SendGrid] Error sending email:", error);
+    console.error("❌ [Email] Error sending email");
     if (error.response) {
-      console.error("❌ [SendGrid] SendGrid error status:", error.response.statusCode);
-      console.error("❌ [SendGrid] SendGrid error body:", JSON.stringify(error.response.body, null, 2));
-    }
-    if (error instanceof Error) {
-      console.error("❌ [SendGrid] Error message:", error.message);
+      console.error("❌ [Email] Status:", error.response.statusCode);
+    } else if (error instanceof Error) {
+      console.error("❌ [Email]", error.message);
     }
     return { success: false, message: error.message || 'Unknown error sending email' };
   }
