@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <!-- Document background -->
+  <rect x="10" y="8" width="44" height="48" rx="4" ry="4" fill="#4A90E2" stroke="none"/>
+  
+  <!-- Document lines -->
+  <line x1="18" y1="20" x2="46" y2="20" stroke="#ffffff" stroke-width="2"/>
+  <line x1="18" y1="28" x2="46" y2="28" stroke="#ffffff" stroke-width="2"/>
+  <line x1="18" y1="36" x2="46" y2="36" stroke="#ffffff" stroke-width="2"/>
+  
+  <!-- Checkmark -->
+  <path d="M24 42 l6 6 l12 -12" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Bottom document fold effect -->
+  <path d="M54 8 L44 18 L44 8 Z" fill="#2E73B8"/>
+
+</svg>
