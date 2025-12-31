@@ -121,18 +121,63 @@ const Contact = () => {
   };
 
   return (
-    <section id="contact" className="overflow-hidden py-16 md:py-20 lg:py-28">
+    <section id="contact" className="overflow-hidden py-16 md:py-20 lg:py-28 bg-gradient-to-b from-white to-gray-50 dark:from-gray-dark dark:to-gray-dark/50">
+      <style>{`
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .contact-form-container {
+          animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        .form-group {
+          transition: all 0.3s ease;
+        }
+
+        .form-input {
+          transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+          box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+          transform: translateY(-2px);
+        }
+
+        .submit-btn {
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .submit-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(74, 108, 247, 0.3);
+        }
+
+        .submit-btn:active {
+          transform: translateY(0);
+        }
+      `}</style>
+      
       <div className="container">
         <div className="-mx-4 flex flex-wrap">
           <div className="w-full px-4 lg:w-7/12 xl:w-8/12">
             <div
-              className="mb-12 rounded-sm bg-white px-8 py-11 shadow-three dark:bg-gray-dark sm:p-[55px] lg:mb-5 lg:px-8 xl:p-[55px]"
+              className="contact-form-container mb-12 rounded-2xl bg-white px-8 py-11 shadow-lg dark:bg-gray-dark sm:p-[55px] lg:mb-5 lg:px-8 xl:p-[55px] border border-gray-200 dark:border-gray-700/50 backdrop-blur-sm"
               data-wow-delay=".15s"
             >
-              <h2 className="mb-3 text-2xl font-bold text-black dark:text-white sm:text-3xl lg:text-2xl xl:text-3xl">
+              <h2 className="mb-3 text-3xl md:text-4xl font-bold text-black dark:text-white">
                 In Need of Custom Software Solutions?
               </h2>
-              <p className="mb-12 text-base font-medium text-body-color">
+              <p className="mb-12 text-base font-medium text-body-color dark:text-body-color-dark leading-relaxed">
                 Ready to get started? Tell us about your software needs in the form below. Our team will carefully review your inquiry and connect with you to explore the best solutions for your business.
               </p>
 
@@ -140,66 +185,68 @@ const Contact = () => {
               <form onSubmit={handleSubmit}>
                 <div className="-mx-4 flex flex-wrap">
                   <div className="w-full px-4 md:w-1/2">
-                    <div className="mb-8">
+                    <div className="mb-8 form-group">
                       <label
                         htmlFor="name"
-                        className="mb-3 block text-sm font-medium text-dark dark:text-white"
+                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
                       >
                         Your Name
                       </label>
                       <input
                         type="text"
                         placeholder="Enter your name"
-                        className="border-stroke w-full rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none"
+                        className="form-input border-stroke w-full rounded-lg border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none transition-all"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                       />
-                      {errors.name && <p className="text-red-600 text-sm">{errors.name}</p>}
+                      {errors.name && <p className="text-red-500 text-sm mt-2">{errors.name}</p>}
                     </div>
                   </div>
                   <div className="w-full px-4 md:w-1/2">
-                    <div className="mb-8">
+                    <div className="mb-8 form-group">
                       <label
                         htmlFor="email"
-                        className="mb-3 block text-sm font-medium text-dark dark:text-white"
+                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
                       >
                         Your Email
                       </label>
                       <input
                         type="email"
                         placeholder="Enter your email"
-                        className="border-stroke w-full rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none"
+                        className="form-input border-stroke w-full rounded-lg border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none transition-all"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
-                      {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
+                      {errors.email && <p className="text-red-500 text-sm mt-2">{errors.email}</p>}
                     </div>
                   </div>
                   <div className="w-full px-4 mb-4">
-                    <label
-                      htmlFor="products"
-                      className="mb-3 block text-sm font-medium text-dark dark:text-white"
-                    >
-                      Select a Service Offering
-                    </label>
                     <div className="form-group">
-                      <Multiselect
-                        required
-                        options={productList}
-                        selected={products}
-                        setSelected={setProducts}
-                        labelname=""    // Add the labelname prop
-                        Iwidth="100%"                  // Add the Iwidth prop
-                        placeholder="Choose services" 
-                      />
-                      {errors.products && <p className="text-red-600 text-sm">{errors.products}</p>}
+                      <label
+                        htmlFor="products"
+                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
+                      >
+                        Select a Service Offering
+                      </label>
+                      <div className="form-group">
+                        <Multiselect
+                          required
+                          options={productList}
+                          selected={products}
+                          setSelected={setProducts}
+                          labelname=""
+                          Iwidth="100%"
+                          placeholder="Choose services"
+                        />
+                        {errors.products && <p className="text-red-500 text-sm mt-2">{errors.products}</p>}
+                      </div>
                     </div>
                   </div>
                   <div className="w-full px-4">
-                    <div className="mb-8">
+                    <div className="mb-8 form-group">
                       <label
                         htmlFor="message"
-                        className="mb-3 block text-sm font-medium text-dark dark:text-white"
+                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
                       >
                         Your Message
                       </label>
@@ -207,42 +254,45 @@ const Contact = () => {
                         name="message"
                         rows={5}
                         placeholder="Enter your Message"
-                        className="border-stroke w-full resize-none rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none"
+                        className="form-input border-stroke w-full resize-none rounded-lg border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none transition-all"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                       ></textarea>
-                      {errors.message && <p className="text-red-600 text-sm">{errors.message}</p>}
+                      {errors.message && <p className="text-red-500 text-sm mt-2">{errors.message}</p>}
                     </div>
                   </div>
                   <div className="w-full px-4">
                     <button
                       type="submit"
-                      className={`rounded-sm bg-primary px-9 py-4 text-base font-medium text-white shadow-submit duration-300 hover:bg-primary/90 dark:shadow-submit-dark ${
-                        loading ? 'opacity-50 cursor-not-allowed' : ''
+                      className={`submit-btn w-full rounded-lg bg-primary px-9 py-4 text-base font-semibold text-white shadow-lg ${
+                        loading ? 'opacity-70 cursor-not-allowed' : ''
                       }`}
                       disabled={loading}
                     >
                       {loading ? (
-                        <svg
-                          className="animate-spin h-5 w-5 text-white inline-block"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v8H4z"
-                          ></path>
-                        </svg>
+                        <div className="flex items-center justify-center">
+                          <svg
+                            className="animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v8H4z"
+                            ></path>
+                          </svg>
+                          <span className="ml-3">Submitting...</span>
+                        </div>
                       ) : (
                         'Submit Request'
                       )}

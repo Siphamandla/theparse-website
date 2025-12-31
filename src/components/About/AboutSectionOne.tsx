@@ -8,9 +8,15 @@ const checkIcon = (
 );
 
 const AboutSectionOne = () => {
-  const List = ({ text }) => (
-    <p className="mb-5 flex items-center text-lg font-medium text-body-color">
-      <span className="mr-4 flex h-[30px] w-[30px] items-center justify-center rounded-md bg-primary bg-opacity-10 text-primary">
+  const List = ({ text, delay = "0s" }) => (
+    <p 
+      className="mb-5 flex items-center text-lg font-medium text-body-color animate-fadeInUp"
+      style={{
+        animation: `fadeInUp 0.6s ease-out forwards`,
+        animationDelay: delay,
+      }}
+    >
+      <span className="mr-4 flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 text-white shadow-lg shadow-primary/20 transform transition-transform duration-300 hover:scale-110">
         {checkIcon}
       </span>
       {text}
@@ -19,10 +25,44 @@ const AboutSectionOne = () => {
 
   return (
     <section id="about" className="pt-16 md:pt-20 lg:pt-28">
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slideInFromLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideInFromRight {
+          from {
+            opacity: 0;
+            transform: translateX(50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
       <div className="container">
         <div className="border-b border-body-color/[.15] pb-16 dark:border-white/[.15] md:pb-20 lg:pb-28">
           <div className="-mx-4 flex flex-wrap items-center">
-            <div className="w-full px-4 lg:w-1/2">
+            <div className="w-full px-4 lg:w-1/2 animate-fadeInUp" style={{ animation: 'slideInFromLeft 0.8s ease-out' }}>
               <SectionTitle
                 title="Crafted for Startup, SaaS and Business Sites."
                 paragraph="At theParse, we craft bespoke software solutions precisely tailored to your business needs. Our expert team ensures every solution is engineered to deliver exceptional performance, scalability, and innovation."
@@ -35,21 +75,21 @@ const AboutSectionOne = () => {
               >
                 <div className="mx-[-12px] flex flex-wrap">
                   <div className="w-full px-3 sm:w-1/2 lg:w-full xl:w-1/2">
-                    <List text="Fullstack Development" />
-                    <List text="E-Commerce Development" />
-                    <List text="Mobile App Development" />
+                    <List text="Fullstack Development" delay="0.1s" />
+                    <List text="E-Commerce Development" delay="0.2s" />
+                    <List text="Mobile App Development" delay="0.3s" />
                   </div>
 
                   <div className="w-full px-3 sm:w-1/2 lg:w-full xl:w-1/2">
-                    <List text="AI Integration" />
-                    <List text="Rich documentation" />
-                    <List text="Developer friendly" />
+                    <List text="AI Integration" delay="0.4s" />
+                    <List text="Rich documentation" delay="0.5s" />
+                    <List text="Developer friendly" delay="0.6s" />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="w-full px-4 lg:w-1/2">
+            <div className="w-full px-4 lg:w-1/2 animate-fadeInUp" style={{ animation: 'slideInFromRight 0.8s ease-out' }}>
               <div className="relative mx-auto aspect-[25/24] max-w-[500px] lg:mr-0">
                 <Image
                   src="/images/about/about-image.svg"

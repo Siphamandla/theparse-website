@@ -3,6 +3,57 @@ import Link from "next/link";
 const Hero = () => {
   return (
     <>
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+        
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        .animate-fade-in-up {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .animate-fade-in-up-delayed {
+          animation: fadeInUp 0.8s ease-out 0.2s forwards;
+          opacity: 0;
+        }
+        
+        .animate-fade-in-up-delayed-lg {
+          animation: fadeInUp 0.8s ease-out 0.4s forwards;
+          opacity: 0;
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse 3s ease-in-out infinite;
+        }
+      `}</style>
+      
       <section
         id="home"
         className="relative z-10 overflow-hidden bg-white pb-16 pt-[120px] dark:bg-gray-dark md:pb-[120px] md:pt-[150px] xl:pb-[160px] xl:pt-[180px] 2xl:pb-[200px] 2xl:pt-[210px]"
@@ -10,32 +61,114 @@ const Hero = () => {
         <div className="container">
           <div className="-mx-4 flex flex-wrap">
             <div className="w-full px-4">
-              <div className="mx-auto max-w-[800px] text-center">
-                <h1 className="mb-5 text-3xl font-bold leading-tight text-black dark:text-white sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight">
-                  Welcome to theParse
+              <div className="mx-auto max-w-[1000px]">
+                {/* Main heading with gradient */}
+                <h1 className="animate-fade-in-up mb-6 text-center text-4xl font-bold leading-tight text-black dark:text-white sm:text-5xl sm:leading-tight md:text-6xl md:leading-tight">
+                  Welcome to <span className="bg-gradient-to-r from-primary via-primary to-blue-600 bg-clip-text text-transparent">theParse</span>
                 </h1>
-                <p className="mb-12 text-base !leading-relaxed text-body-color dark:text-body-color-dark sm:text-lg md:text-xl">
+                
+                {/* Subheading */}
+                <p className="animate-fade-in-up-delayed mb-12 text-center text-base font-medium !leading-relaxed text-primary sm:text-lg">
+                  South African Software Innovation Company
+                </p>
+                
+                {/* Main intro statement */}
+                <p className="animate-fade-in-up-delayed mb-12 text-center text-lg !leading-relaxed text-body-color dark:text-body-color-dark max-w-2xl mx-auto font-medium">
                   At theParse, we craft bespoke software solutions precisely tailored to your business needs. Our expert team ensures every solution is engineered to deliver exceptional performance, scalability, and innovation.
                 </p>
-                <div className="flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
+                
+                {/* Horizontal flow cards */}
+                <div className="animate-fade-in-up-delayed mb-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Card 1 - Specialities */}
+                    <div className="group relative rounded-2xl overflow-hidden">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/40 to-blue-500/40 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative rounded-2xl bg-white dark:bg-gray-800 p-6 h-full border border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                        <div className="flex flex-col h-full">
+                          <div className="w-12 h-12 mb-3 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-bold text-primary mb-2">Core Expertise</h3>
+                          <p className="text-sm text-body-color dark:text-body-color-dark leading-relaxed flex-grow">
+                            Advanced analytics, artificial intelligence, IoT, and edge computing
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 2 - Solutions */}
+                    <div className="group relative rounded-2xl overflow-hidden">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/40 to-blue-500/40 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative rounded-2xl bg-white dark:bg-gray-800 p-6 h-full border border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                        <div className="flex flex-col h-full">
+                          <div className="w-12 h-12 mb-3 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-bold text-primary mb-2">Solutions</h3>
+                          <p className="text-sm text-body-color dark:text-body-color-dark leading-relaxed flex-grow">
+                            Cloud-native development and bespoke mobile & web applications
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3 - Process */}
+                    <div className="group relative rounded-2xl overflow-hidden">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/40 to-blue-500/40 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative rounded-2xl bg-white dark:bg-gray-800 p-6 h-full border border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                        <div className="flex flex-col h-full">
+                          <div className="w-12 h-12 mb-3 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-bold text-primary mb-2">Full Lifecycle</h3>
+                          <p className="text-sm text-body-color dark:text-body-color-dark leading-relaxed flex-grow">
+                            Strategy, design, development, deployment, and optimisation
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 4 - Impact */}
+                    <div className="group relative rounded-2xl overflow-hidden">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/40 to-blue-500/40 rounded-2xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="relative rounded-2xl bg-white dark:bg-gray-800 p-6 h-full border border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                        <div className="flex flex-col h-full">
+                          <div className="w-12 h-12 mb-3 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-bold text-primary mb-2">Impact</h3>
+                          <p className="text-sm text-body-color dark:text-body-color-dark leading-relaxed flex-grow">
+                            Secure, scalable platforms that help organisations across Africa innovate and compete globally
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* CTA Button */}
+                <div className="animate-fade-in-up-delayed-lg flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
                   <Link
                     href="/contact"
-                    className="rounded-sm bg-primary px-8 py-4 text-base font-semibold text-white duration-300 ease-in-out hover:bg-primary/80"
+                    className="group relative rounded-lg bg-gradient-to-r from-primary to-blue-600 px-10 py-4 text-base font-bold text-white duration-300 ease-in-out hover:shadow-2xl hover:shadow-primary/50 transition-all overflow-hidden"
                   >
-                    Contact Us
+                    <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                    <span className="relative z-10">Get Started Today</span>
                   </Link>
-                  {/* <Link
-                    href="https://github.com/NextJSTemplates/startup-nextjs"
-                    className="inline-block rounded-sm bg-black px-8 py-4 text-base font-semibold text-white duration-300 ease-in-out hover:bg-black/90 dark:bg-white/10 dark:text-white dark:hover:bg-white/5"
-                  >
-                    Star on GitHub
-                  </Link> */}
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="absolute right-0 top-0 z-[-1] opacity-30 lg:opacity-100">
+        <div className="absolute right-0 top-0 z-[-1] opacity-30 lg:opacity-100 animate-pulse-slow">
           <svg
             width="450"
             height="556"
