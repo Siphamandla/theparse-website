@@ -9,14 +9,19 @@ if (!uri) {
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
+declare global {
+  // eslint-disable-next-line no-var
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
+
 // In development mode, use a global variable to store the MongoClient promise
 // to avoid creating multiple instances during hot-reloading.
 if (process.env.NODE_ENV === 'development') {
-  if (!(global as any)._mongoClientPromise) {
+  if (!globalThis._mongoClientPromise) {
     client = new MongoClient(uri);
-    (global as any)._mongoClientPromise = client.connect();
+    globalThis._mongoClientPromise = client.connect();
   }
-  clientPromise = (global as any)._mongoClientPromise;
+  clientPromise = globalThis._mongoClientPromise;
 } else {
   // In production, it's fine to create a new client for each request
   client = new MongoClient(uri);

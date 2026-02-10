@@ -107,7 +107,7 @@ const PrivacyPolicy = () => {
 
             <AccordionItem title="8. Changes to This Privacy Policy">
               <p>
-                <strong>theParse</strong> reserves the right to update this Privacy Policy from time to time. Any changes will be posted on this page with a new "Last Updated" date.
+                <strong>theParse</strong> reserves the right to update this Privacy Policy from time to time. Any changes will be posted on this page with a new &quot;Last Updated&quot; date.
               </p>
               <p>We encourage you to review this policy periodically to stay informed about how we protect your data.</p>
             </AccordionItem>

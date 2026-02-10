@@ -29,6 +29,12 @@ const Footer = () => {
                 <p className="mb-9 text-base leading-relaxed text-body-color dark:text-body-color-dark">
                   theParse is a leading South African software innovation company delivering intelligent, cloud-native, mobile and web solutions powered by AI, advanced analytics, IoT, and edge computing, helping organisations solve real-world problems and scale with confidence across Africa.
                 </p>
+                <a
+                  href="mailto:info@theparse.co.za"
+                  className="inline-flex items-center text-base text-body-color transition-colors duration-300 hover:text-primary dark:text-body-color-dark dark:hover:text-primary"
+                >
+                  info@theparse.co.za
+                </a>
                 {/* <div className="flex items-center">
                   <a
                     href="/"

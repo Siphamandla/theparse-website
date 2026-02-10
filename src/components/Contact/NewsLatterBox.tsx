@@ -1,10 +1,7 @@
 "use client";
 import { useState } from "react";
-import { useTheme } from "next-themes";
 
 const NewsLatterBox = () => {
-  const { theme } = useTheme();
-
   // State variables
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -38,7 +35,7 @@ const NewsLatterBox = () => {
         body: JSON.stringify({ name, email }),
       });
 
-      const result = await res.json();
+  await res.json();
 
       if (res.status === 400) {
         setFormStatus('Email already exists. Please try another one.');

@@ -116,7 +116,7 @@ const DataPolicy = () => {
 
             <AccordionItem title="9. Changes to This Data Policy">
               <p>
-                <strong>theParse</strong> reserves the right to update this Data Policy as needed. We will notify you of any significant changes by updating the "Last Updated" date at the top of the policy. Please review this policy periodically to stay informed about how we handle your data.
+                <strong>theParse</strong> reserves the right to update this Data Policy as needed. We will notify you of any significant changes by updating the &quot;Last Updated&quot; date at the top of the policy. Please review this policy periodically to stay informed about how we handle your data.
               </p>
             </AccordionItem>
 

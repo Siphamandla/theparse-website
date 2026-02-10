@@ -14,6 +14,11 @@ const productList = [
   { value: "ecommerce", label: "eCommerce Platform" }
 ];
 
+type ProductOption = {
+  value: string;
+  label: string;
+};
+
 interface Errors {
   name?: string;
   email?: string;
@@ -33,15 +38,14 @@ const Contact = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
-  const [products, setProducts] = useState<any[]>([]);
-  const [formStatus, setFormStatus] = useState('');
+  const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(false); // Loading state for the button
   const [errors, setErrors] = useState<Errors>({});// State to handle validation errors
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, type: 'success' });
 
   // Basic form validation
   const validateForm = () => {
-    const newErrors: any = {};
+  const newErrors: Errors = {};
     if (!name.trim()) newErrors.name = "Name is required";
     if (!email.trim()) newErrors.email = "Email is required";
     if (!message.trim()) newErrors.message = "Message is required";

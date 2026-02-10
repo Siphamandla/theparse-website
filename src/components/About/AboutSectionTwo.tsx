@@ -93,7 +93,7 @@ const AboutSectionTwo = () => {
                   Our dedicated support team is available to provide prompt, 
                   personalised assistance whenever you need it. 
                   From troubleshooting technical issues to optimising performance, 
-                  we're here to ensure that your systems operate at their best. 
+                  we&apos;re here to ensure that your systems operate at their best. 
                 </p>
               </div>
               <div 

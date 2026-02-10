@@ -1,65 +1,102 @@
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb'; // Import the MongoDB client promise
-import sendEmail from "@/lib/sendgrid"; // Ensure named export is correct
+import { NextResponse } from "next/server";
+import clientPromise from "@/lib/mongodb";
+import sendEmail from "@/lib/sendgrid";
+
+type ContactProduct = {
+  label: string;
+  value?: string;
+};
+
+type ContactFormPayload = {
+  name: string;
+  email: string;
+  message: string;
+  products?: ContactProduct[];
+};
+
+type ConfirmationPayload = {
+  name: string;
+  submissionId: string;
+};
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, name, message, products } = body;
+  const body = (await request.json()) as ContactFormPayload;
+  const { email, name, message, products } = body;
 
     const client = await clientPromise;
-    const db = client.db('theParse');
-    const collection = db.collection('contacts-us');
+  const db = client.db("theParse");
+  const collection = db.collection("contacts-us");
 
     // Check if an email already exists in the database
     const existingUser = await collection.findOne({ email });
 
     if (existingUser) {
-      return NextResponse.json({ message: 'Email already exists' }, { status: 400 });
+      return NextResponse.json({ message: "Email already exists" }, { status: 400 });
     }
 
     // Insert form data into MongoDB if no duplicate email is found
     const result = await collection.insertOne(body);
-    console.log('✅ [Contact] New submission received');
 
     // Send email to company admin with all form details
-    const adminEmail = process.env.THEPARSE_CONTACTUS_BCC || process.env.ADMIN_EMAIL;
+    const adminEmail =
+      process.env.THEPARSE_CONTACTUS_BCC || process.env.ADMIN_EMAIL;
     if (!adminEmail) {
-      throw new Error('No admin email configured');
+      throw new Error("No admin email configured");
     }
-    
-    const emailResponse = await sendEmail({
+
+    await sendEmail({
       to: adminEmail,
       cc: "",
       bcc: "",
+      replyTo: email,
       subject: `New Contact Form Submission from ${name}`,
       plainTextContent: generatePlainTextEmail({ name, email, message, products }),
       htmlContent: generateHtmlEmail({ name, email, message, products }),
     });
 
     // Send confirmation email to user
-    const userConfirmationResponse = await sendEmail({
+    await sendEmail({
       to: email,
       cc: "",
       bcc: "",
-      subject: 'We Received Your Inquiry - TheParse',
-      plainTextContent: generateUserConfirmationEmail({ name, submissionId: result.insertedId.toString() }),
-      htmlContent: generateUserConfirmationHtmlEmail({ name, submissionId: result.insertedId.toString() }),
+      subject: "We Received Your Inquiry - TheParse",
+      plainTextContent: generateUserConfirmationEmail({
+        name,
+        submissionId: result.insertedId.toString(),
+      }),
+      htmlContent: generateUserConfirmationHtmlEmail({
+        name,
+        submissionId: result.insertedId.toString(),
+      }),
     });
 
+    console.log("✅ [Contact] Submission processed");
+
     // Return a success response
-    return NextResponse.json({ message: 'Form submitted successfully', result });
+    return NextResponse.json({ message: "Form submitted successfully", result });
   } catch (error) {
-    console.error('❌ [Contact] Error:', error instanceof Error ? error.message : error);
-    return NextResponse.json({ message: 'Error submitting form', error }, { status: 500 });
+    console.error(
+      "❌ [Contact] Error:",
+      error instanceof Error ? error.message : error,
+    );
+    return NextResponse.json(
+      { message: "Error submitting form", error },
+      { status: 500 },
+    );
   }
 }
 
 // Helper function to generate plain text email
-function generatePlainTextEmail({ name, email, message, products }: any): string {
+function generatePlainTextEmail({
+  name,
+  email,
+  message,
+  products,
+}: ContactFormPayload): string {
   const productsList = Array.isArray(products) && products.length > 0
-    ? products.map((p: any) => `- ${p.label}`).join('\n')
-    : 'No services selected';
+    ? products.map((product) => `- ${product.label}`).join("\n")
+    : "No services selected";
 
   return `
 New Contact Form Submission
@@ -77,10 +114,15 @@ This is an automated email from your contact form.
 }
 
 // Helper function to generate HTML email
-function generateHtmlEmail({ name, email, message, products }: any): string {
+function generateHtmlEmail({
+  name,
+  email,
+  message,
+  products,
+}: ContactFormPayload): string {
   const productsList = Array.isArray(products) && products.length > 0
-    ? products.map((p: any) => `<li>${p.label}</li>`).join('')
-    : '<li>No services selected</li>';
+    ? products.map((product) => `<li>${product.label}</li>`).join("")
+    : "<li>No services selected</li>";
 
   return `
 <!DOCTYPE html>
@@ -137,7 +179,10 @@ function generateHtmlEmail({ name, email, message, products }: any): string {
 }
 
 // Helper function to generate user confirmation plain text email
-function generateUserConfirmationEmail({ name, submissionId }: any): string {
+function generateUserConfirmationEmail({
+  name,
+  submissionId,
+}: ConfirmationPayload): string {
   return `
 Hello ${name},
 
@@ -155,7 +200,10 @@ The TheParse Team
 }
 
 // Helper function to generate user confirmation HTML email
-function generateUserConfirmationHtmlEmail({ name, submissionId }: any): string {
+function generateUserConfirmationHtmlEmail({
+  name,
+  submissionId,
+}: ConfirmationPayload): string {
   return `
 <!DOCTYPE html>
 <html>
