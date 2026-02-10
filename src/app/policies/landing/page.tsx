@@ -1,4 +1,5 @@
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import Image from "next/image";
 import { Metadata } from "next";
 
 // Metadata for the page
@@ -65,10 +66,12 @@ const Policies = () => {
                 className="w-full px-4 md:w-1/2 lg:w-1/3 xl:w-1/4 mb-8"
               >
                 <a href={policy.link} className="block text-center transition hover:shadow-lg p-6 rounded-lg border border-gray-200 bg-white dark:bg-gray-800">
-                  <img
+                  <Image
                     src={policy.icon}
                     alt={`${policy.title} Icon`}
-                    className="mx-auto mb-4 h-12 w-12"
+                    className="mx-auto mb-4"
+                    width={48}
+                    height={48}
                   />
                   <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
                     {policy.title}
