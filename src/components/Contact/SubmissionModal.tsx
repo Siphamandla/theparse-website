@@ -1,100 +1,78 @@
 "use client";
 
+import { useEffect } from "react";
+import Icon, { type IconName } from "@/components/ui/Icon";
+
+export type ModalType = "success" | "error" | "duplicate";
+
 interface SubmissionModalProps {
   isOpen: boolean;
-  type: 'success' | 'error' | 'duplicate';
+  type: ModalType;
   userEmail?: string;
   submissionId?: string;
   onClose: () => void;
 }
 
-const SubmissionModal: React.FC<SubmissionModalProps> = ({
-  isOpen,
-  type,
-  userEmail,
-  submissionId,
-  onClose,
-}) => {
+const content: Record<ModalType, { cls: string; icon: IconName; title: string; button: string; message: (email?: string) => string }> = {
+  success: {
+    cls: "ok",
+    icon: "checkc",
+    title: "Thank you! Your enquiry has been received",
+    button: "Close",
+    message: (email) =>
+      `A confirmation email has been sent to ${email}. Our team will review your enquiry and get back to you as soon as possible.`,
+  },
+  duplicate: {
+    cls: "dup",
+    icon: "info",
+    title: "We already have your enquiry",
+    button: "Got it",
+    message: (email) =>
+      `We've already received an enquiry from ${email}. Our team will be in touch shortly. Please check your email for updates.`,
+  },
+  error: {
+    cls: "bad",
+    icon: "x",
+    title: "Oops! Something went wrong",
+    button: "Close",
+    message: () => "We couldn't submit your form. Please try again later or email us directly at info@theparse.co.za.",
+  },
+};
+
+export default function SubmissionModal({ isOpen, type, userEmail, submissionId, onClose }: SubmissionModalProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
-
-  const getModalContent = () => {
-    switch (type) {
-      case 'success':
-        return {
-          icon: '✓',
-          title: 'Thank You! Your Inquiry Has Been Received',
-          message: `We've received your contact form submission. A confirmation email has been sent to ${userEmail}. Our team will review your inquiry and get back to you as soon as possible.`,
-          buttonText: 'Close',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
-          iconColor: 'text-green-600',
-          buttonColor: 'bg-green-600 hover:bg-green-700',
-        };
-      case 'duplicate':
-        return {
-          icon: 'ℹ',
-          title: 'We Already Have Your Inquiry',
-          message: `We've already received an inquiry from ${userEmail}. Our team will be in touch with you shortly. Please check your email for updates.`,
-          buttonText: 'Got It',
-          bgColor: 'bg-blue-50',
-          borderColor: 'border-blue-200',
-          iconColor: 'text-blue-600',
-          buttonColor: 'bg-blue-600 hover:bg-blue-700',
-        };
-      case 'error':
-        return {
-          icon: '✕',
-          title: 'Oops! Something Went Wrong',
-          message: 'We encountered an error while submitting your form. Please try again later or contact us directly.',
-          buttonText: 'Close',
-          bgColor: 'bg-red-50',
-          borderColor: 'border-red-200',
-          iconColor: 'text-red-600',
-          buttonColor: 'bg-red-600 hover:bg-red-700',
-        };
-    }
-  };
-
-  const content = getModalContent();
+  const c = content[type];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className={`${content.bgColor} border-l-4 ${content.borderColor} rounded-lg shadow-lg max-w-md w-full mx-4 p-6 md:p-8`}>
-        {/* Icon */}
-        <div className="flex justify-center mb-4">
-          <div className={`${content.iconColor} text-5xl font-bold`}>
-            {content.icon}
-          </div>
-        </div>
-
-        {/* Title */}
-        <h3 className="text-xl md:text-2xl font-bold text-gray-800 text-center mb-3">
-          {content.title}
-        </h3>
-
-        {/* Message */}
-        <p className="text-gray-600 text-center text-sm md:text-base mb-6 leading-relaxed">
-          {content.message}
-        </p>
-
-        {/* Submission ID (if available) */}
+    <div className="modal-back" onClick={onClose}>
+      <div
+        className={`modal ${c.cls}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="ic-box"><Icon name={c.icon} /></span>
+        <h3 id="modal-title">{c.title}</h3>
+        <p>{c.message(userEmail)}</p>
         {submissionId && (
-          <div className="bg-white bg-opacity-50 rounded p-3 mb-6 text-center">
-            <p className="text-xs text-gray-500 mb-1">Submission ID</p>
-            <p className="text-sm font-mono text-gray-700 break-all">{submissionId}</p>
+          <div className="sid">
+            Submission ID
+            <br />
+            {submissionId}
           </div>
         )}
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className={`w-full ${content.buttonColor} text-white font-medium py-2 px-4 rounded-sm transition duration-200 ease-in-out`}
-        >
-          {content.buttonText}
+        <button className="btn btn-primary" onClick={onClose} autoFocus>
+          {c.button}
         </button>
       </div>
     </div>
   );
-};
-
-export default SubmissionModal;
+}

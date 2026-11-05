@@ -1,23 +1,9 @@
 "use client";
+
 import { useState } from "react";
-import Multiselect from './MultiSelect';
-import NewsLatterBox from "./NewsLatterBox";
-import SubmissionModal from "./SubmissionModal";
-
-const productList = [
-  { value: "software_consulting", label: "Software Consulting" },
-  { value: "website_development", label: "Website Development" },
-  { value: "mobile_development", label: "Mobile Application Development" },
-  { value: "iot_integration", label: "IoT, IIoT" },
-  { value: "ai_integration", label: "AI Integration" },
-  { value: "cloud_migration", label: "Cloud Migration Support" },
-  { value: "ecommerce", label: "eCommerce Platform" }
-];
-
-type ProductOption = {
-  value: string;
-  label: string;
-};
+import Icon, { Arrow } from "@/components/ui/Icon";
+import { contactEmail, serviceOptions, type ServiceOption } from "@/data/site";
+import SubmissionModal, { type ModalType } from "./SubmissionModal";
 
 interface Errors {
   name?: string;
@@ -28,300 +14,176 @@ interface Errors {
 
 interface ModalState {
   isOpen: boolean;
-  type: 'success' | 'error' | 'duplicate';
+  type: ModalType;
   userEmail?: string;
   submissionId?: string;
 }
 
-const Contact = () => {
-  // State for form inputs
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [products, setProducts] = useState<ProductOption[]>([]);
-  const [loading, setLoading] = useState(false); // Loading state for the button
-  const [errors, setErrors] = useState<Errors>({});// State to handle validation errors
-  const [modalState, setModalState] = useState<ModalState>({ isOpen: false, type: 'success' });
+/** "Start a project" card with the contact form. Submits to /api/contact. */
+export default function Contact({
+  title = "Tell us what you're building.",
+  preselect = [],
+}: {
+  title?: string;
+  /** Service values to pre-select, e.g. from an AI page CTA. */
+  preselect?: string[];
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [products, setProducts] = useState<ServiceOption[]>(
+    serviceOptions.filter((o) => preselect.includes(o.value)),
+  );
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Errors>({});
+  const [modal, setModal] = useState<ModalState>({ isOpen: false, type: "success" });
 
-  // Basic form validation
-  const validateForm = () => {
-  const newErrors: Errors = {};
-    if (!name.trim()) newErrors.name = "Name is required";
-    if (!email.trim()) newErrors.email = "Email is required";
-    if (!message.trim()) newErrors.message = "Message is required";
-    if (products.length === 0) newErrors.products = "Please select at least one service";
+  const toggle = (opt: ServiceOption) =>
+    setProducts((cur) =>
+      cur.some((p) => p.value === opt.value) ? cur.filter((p) => p.value !== opt.value) : [...cur, opt],
+    );
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validate = () => {
+    const e: Errors = {};
+    if (!name.trim()) e.name = "Name is required";
+    if (!email.trim()) e.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(email)) e.email = "Please enter a valid email";
+    if (!message.trim()) e.message = "Message is required";
+    if (products.length === 0) e.products = "Please select at least one service";
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const clearfields = () => {
-    setName('');
-    setEmail('');
-    setMessage('');
+  const clear = () => {
+    setName("");
+    setEmail("");
+    setMessage("");
     setProducts([]);
-  }
+  };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // Validate form inputs before submission
-    if (!validateForm()) {
-      return;
-    }
-  
-    setLoading(true); // Start the loading spinner
-    const formData = { name, email, message, products };
-  
+    if (!validate()) return;
+    setLoading(true);
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message, products }),
       });
-  
-      const result = await res.json(); // Parse JSON response
-  
+      const result = await res.json();
       if (res.status === 400) {
-        // Handle duplicate email error
-        setModalState({
-          isOpen: true,
-          type: 'duplicate',
-          userEmail: email,
-        });
-        clearfields();
+        setModal({ isOpen: true, type: "duplicate", userEmail: email });
+        clear();
       } else if (res.ok) {
-        // Handle successful form submission
-        setModalState({
+        setModal({
           isOpen: true,
-          type: 'success',
+          type: "success",
           userEmail: email,
           submissionId: result.result?.insertedId,
         });
-        clearfields();
+        clear();
       } else {
-        // Handle other types of errors (like 500 server errors)
-        setModalState({
-          isOpen: true,
-          type: 'error',
-        });
+        setModal({ isOpen: true, type: "error" });
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      setModalState({
-        isOpen: true,
-        type: 'error',
-      });
+      console.error("Error submitting form:", error);
+      setModal({ isOpen: true, type: "error" });
     } finally {
-      setLoading(false); // Stop the loading spinner
+      setLoading(false);
     }
   };
 
-  const closeModal = () => {
-    setModalState({ isOpen: false, type: 'success' });
-  };
-
   return (
-    <section id="contact" className="overflow-hidden py-16 md:py-20 lg:py-28 bg-gradient-to-b from-white to-gray-50 dark:from-gray-dark dark:to-gray-dark/50">
-      <style>{`
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .contact-form-container {
-          animation: slideInUp 0.6s ease-out forwards;
-        }
-
-        .form-group {
-          transition: all 0.3s ease;
-        }
-
-        .form-input {
-          transition: all 0.3s ease;
-        }
-
-        .form-input:focus {
-          box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
-          transform: translateY(-2px);
-        }
-
-        .submit-btn {
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .submit-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(74, 108, 247, 0.3);
-        }
-
-        .submit-btn:active {
-          transform: translateY(0);
-        }
-      `}</style>
-      
-      <div className="container">
-        <div className="-mx-4 flex flex-wrap">
-          <div className="w-full px-4 lg:w-7/12 xl:w-8/12">
-            <div
-              className="contact-form-container mb-12 rounded-2xl bg-white px-8 py-11 shadow-lg dark:bg-gray-dark sm:p-[55px] lg:mb-5 lg:px-8 xl:p-[55px] border border-gray-200 dark:border-gray-700/50 backdrop-blur-sm"
-              data-wow-delay=".15s"
-            >
-              <h2 className="mb-3 text-3xl md:text-4xl font-bold text-black dark:text-white">
-                In Need of Custom Software Solutions?
-              </h2>
-              <p className="mb-12 text-base font-medium text-body-color dark:text-body-color-dark leading-relaxed">
-                Ready to get started? Tell us about your software needs in the form below. Our team will carefully review your inquiry and connect with you to explore the best solutions for your business.
-              </p>
-
-              {/* Handle form submission */}
-              <form onSubmit={handleSubmit}>
-                <div className="-mx-4 flex flex-wrap">
-                  <div className="w-full px-4 md:w-1/2">
-                    <div className="mb-8 form-group">
-                      <label
-                        htmlFor="name"
-                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
-                      >
-                        Your Name
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Enter your name"
-                        className="form-input border-stroke w-full rounded-lg border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none transition-all"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                      {errors.name && <p className="text-red-500 text-sm mt-2">{errors.name}</p>}
-                    </div>
-                  </div>
-                  <div className="w-full px-4 md:w-1/2">
-                    <div className="mb-8 form-group">
-                      <label
-                        htmlFor="email"
-                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
-                      >
-                        Your Email
-                      </label>
-                      <input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="form-input border-stroke w-full rounded-lg border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none transition-all"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                      {errors.email && <p className="text-red-500 text-sm mt-2">{errors.email}</p>}
-                    </div>
-                  </div>
-                  <div className="w-full px-4 mb-4">
-                    <div className="form-group">
-                      <label
-                        htmlFor="products"
-                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
-                      >
-                        Select a Service Offering
-                      </label>
-                      <div className="form-group">
-                        <Multiselect
-                          required
-                          options={productList}
-                          selected={products}
-                          setSelected={setProducts}
-                          labelname=""
-                          Iwidth="100%"
-                          placeholder="Choose services"
-                        />
-                        {errors.products && <p className="text-red-500 text-sm mt-2">{errors.products}</p>}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-full px-4">
-                    <div className="mb-8 form-group">
-                      <label
-                        htmlFor="message"
-                        className="mb-3 block text-sm font-semibold text-dark dark:text-white"
-                      >
-                        Your Message
-                      </label>
-                      <textarea
-                        name="message"
-                        rows={5}
-                        placeholder="Enter your Message"
-                        className="form-input border-stroke w-full resize-none rounded-lg border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-transparent dark:bg-[#2C303B] dark:text-body-color-dark dark:shadow-two dark:focus:border-primary dark:focus:shadow-none transition-all"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      ></textarea>
-                      {errors.message && <p className="text-red-500 text-sm mt-2">{errors.message}</p>}
-                    </div>
-                  </div>
-                  <div className="w-full px-4">
-                    <button
-                      type="submit"
-                      className={`submit-btn w-full rounded-lg bg-primary px-9 py-4 text-base font-semibold text-white shadow-lg ${
-                        loading ? 'opacity-70 cursor-not-allowed' : ''
-                      }`}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <div className="flex items-center justify-center">
-                          <svg
-                            className="animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8v8H4z"
-                            ></path>
-                          </svg>
-                          <span className="ml-3">Submitting...</span>
-                        </div>
-                      ) : (
-                        'Submit Request'
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </form>
-
-              {/* Submission Modal */}
-              <SubmissionModal 
-                isOpen={modalState.isOpen}
-                type={modalState.type}
-                userEmail={modalState.userEmail}
-                submissionId={modalState.submissionId}
-                onClose={closeModal}
-              />
-            </div>
-          </div>
-          <div className="w-full px-4 lg:w-5/12 xl:w-4/12">
-            <NewsLatterBox />
+    <div className="wrap" id="contact">
+      <div className="cta-card reveal">
+        <div>
+          <span className="eyebrow">Start a project</span>
+          <h2>{title}</h2>
+          <p className="lead">
+            Tell us about your software needs and choose the services you&apos;re interested in.
+            Our team will review your enquiry and get back to you.
+          </p>
+          <div className="contact-lines">
+            <a href={`mailto:${contactEmail}`}>
+              <span className="ic"><Icon name="mail" /></span>
+              {contactEmail}
+            </a>
+            <a href="https://theparse.co.za">
+              <span className="ic"><Icon name="link" /></span>
+              theparse.co.za
+            </a>
+            <span className="contact-line">
+              <span className="ic"><Icon name="pin" /></span>
+              South Africa · working globally
+            </span>
           </div>
         </div>
-      </div>
-    </section>
-  );
-};
 
-export default Contact;
+        <form className="f" onSubmit={handleSubmit} noValidate>
+          <div className="row">
+            <div>
+              <label htmlFor="c-name">Name</label>
+              <input id="c-name" placeholder="Enter your name" value={name} onChange={(e) => setName(e.target.value)} />
+              {errors.name && <p className="err">{errors.name}</p>}
+            </div>
+            <div>
+              <label htmlFor="c-email">Email</label>
+              <input
+                id="c-email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              {errors.email && <p className="err">{errors.email}</p>}
+            </div>
+          </div>
+          <div>
+            <label id="c-services">Services</label>
+            <div className="chips" role="group" aria-labelledby="c-services">
+              {serviceOptions.map((o) => {
+                const on = products.some((p) => p.value === o.value);
+                return (
+                  <button type="button" key={o.value} className={on ? "on" : ""} aria-pressed={on} onClick={() => toggle(o)}>
+                    {o.label}
+                  </button>
+                );
+              })}
+            </div>
+            {errors.products && <p className="err">{errors.products}</p>}
+          </div>
+          <div>
+            <label htmlFor="c-msg">Message</label>
+            <textarea
+              id="c-msg"
+              placeholder="Enter your message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+            {errors.message && <p className="err">{errors.message}</p>}
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spin" /> Submitting…
+              </>
+            ) : (
+              <>
+                Send message <Arrow />
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+
+      <SubmissionModal
+        isOpen={modal.isOpen}
+        type={modal.type}
+        userEmail={modal.userEmail}
+        submissionId={modal.submissionId}
+        onClose={() => setModal({ isOpen: false, type: "success" })}
+      />
+    </div>
+  );
+}

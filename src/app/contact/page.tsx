@@ -1,25 +1,25 @@
-import Breadcrumb from "@/components/Common/Breadcrumb";
+import type { Metadata } from "next";
 import Contact from "@/components/Contact";
-
-import { Metadata } from "next";
+import PageHero from "@/components/ui/PageHero";
 
 export const metadata: Metadata = {
-  title: "Contact Page | theParse",
-  description: "Contact us today, to kick-start your software journey",
-  // other metadata
+  title: "Contact",
+  description: "Contact theParse today to kick-start your software journey.",
 };
 
-const ContactPage = () => {
+export default function ContactPage() {
   return (
     <>
-      <Breadcrumb
-        pageName="Contact Page"
-        description="We’d love to hear from you! Whether you have a question about our services, need a custom solution, or just want to get in touch, our team is here to help. Please fill out the form below, and we’ll get back to you as soon as possible."
+      <PageHero
+        crumb="contact"
+        title="Let's build something"
+        accent="exceptional."
+        style={{ paddingBottom: "3rem", borderBottom: 0 }}
+        lead="Whether you have a question about our services, need a custom solution or just want to get in touch, our team is here to help."
       />
-
-      <Contact />
+      <section style={{ paddingTop: 0 }}>
+        <Contact />
+      </section>
     </>
   );
-};
-
-export default ContactPage;
+}

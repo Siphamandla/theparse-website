@@ -1,37 +1,43 @@
-"use client";
-
+import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import ScrollToTop from "@/components/ScrollToTop";
-import { Inter } from "next/font/google";
-import "node_modules/react-modal-video/css/modal-video.css";
+import { RevealObserver, Spotlight } from "@/components/ui/Effects";
+import { Providers } from "./providers";
 import "../styles/index.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const metadata: Metadata = {
+  title: {
+    default: "theParse | Bespoke Software, Exceptional Solutions",
+    template: "%s | theParse",
+  },
+  description:
+    "theParse is a South African software innovation company delivering bespoke software, practical AI, cloud, mobile and web solutions.",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html suppressHydrationWarning lang="en">
-      {/*
-        <head /> will contain the components returned by the nearest parent
-        head.js. Find out more at https://beta.nextjs.org/docs/api-reference/file-conventions/head
-      */}
-      <head />
-
-      <body className={`bg-[#FCFCFC] dark:bg-black ${inter.className}`}>
+    <html suppressHydrationWarning lang="en" className={`${inter.variable} ${mono.variable}`}>
+      <body>
+        <noscript>
+          <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         <Providers>
+          <Spotlight />
           <Header />
-          {children}
+          <main>{children}</main>
           <Footer />
-          <ScrollToTop />
+          <RevealObserver />
         </Providers>
       </body>
     </html>
   );
 }
-
-import { Providers } from "./providers";

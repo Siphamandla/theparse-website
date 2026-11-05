@@ -1,15 +1,16 @@
-import AboutSectionOne from "@/components/About/AboutSectionOne";
-import AboutSectionTwo from "@/components/About/AboutSectionTwo";
+import type { Metadata } from "next";
 import ScrollUp from "@/components/Common/ScrollUp";
 import Contact from "@/components/Contact";
-import Features from "@/components/Features";
-import Hero from "@/components/Hero";
-import { Metadata } from "next";
+import AiSpotlight from "@/components/home/AiSpotlight";
+import Hero, { Marquee } from "@/components/home/Hero";
+import Lifecycle from "@/components/home/Lifecycle";
+import ServicesBento from "@/components/home/ServicesBento";
+import { Stats, Why } from "@/components/home/WhyStats";
 
 export const metadata: Metadata = {
-  title: "Bespoke Software, Exceptional Solutions",
-  description: "theParse delivers bespoke software solutions tailored to your business, ensuring exceptional performance and innovation.",
-  // other metadata
+  title: { absolute: "theParse | Bespoke Software, Exceptional Solutions" },
+  description:
+    "theParse delivers bespoke software solutions tailored to your business, ensuring exceptional performance and innovation.",
 };
 
 export default function Home() {
@@ -17,16 +18,15 @@ export default function Home() {
     <>
       <ScrollUp />
       <Hero />
-      <Features />
-      {/* <Stats /> */}
-      {/* <Video /> - "We are ready to help" section */}
-      {/* <Brands /> */}
-      <AboutSectionOne />
-      <AboutSectionTwo />
-      {/* <Testimonials /> */}
-      {/* <Pricing /> */}
-      {/* <Blog /> - "Our Latest Blogs" section */}
-      <Contact />
+      <Marquee />
+      <ServicesBento />
+      <AiSpotlight />
+      <Lifecycle />
+      <Why />
+      <Stats />
+      <section style={{ paddingTop: 0 }}>
+        <Contact />
+      </section>
     </>
   );
 }
