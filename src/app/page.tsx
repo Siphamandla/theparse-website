@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ScrollUp from "@/components/Common/ScrollUp";
 import Contact from "@/components/Contact";
+import AfricaMap from "@/components/home/AfricaMap";
 import AiSpotlight from "@/components/home/AiSpotlight";
 import Hero, { Marquee } from "@/components/home/Hero";
 import Lifecycle from "@/components/home/Lifecycle";
@@ -24,6 +25,7 @@ export default function Home() {
       <Lifecycle />
       <Why />
       <Stats />
+      <AfricaMap />
       <section style={{ paddingTop: 0 }}>
         <Contact />
       </section>
