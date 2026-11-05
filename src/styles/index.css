@@ -416,6 +416,59 @@ footer.site-foot{border-top:1px solid var(--line);padding:4.5rem 0 3rem;backgrou
 .d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}.rotator span{opacity:1;transform:none}.rotator span:not(:first-child){display:none}}
 
+
+/* ============ Africa footprint map ============ */
+.map-card{display:grid;grid-template-columns:1.25fr .75fr;gap:2rem;align-items:center;padding:clamp(1.2rem,3vw,2.5rem);border-radius:28px;border:1px solid var(--line);background:radial-gradient(700px circle at 30% 40%,rgba(255,93,34,.08),transparent 60%),var(--surface);overflow:hidden}
+.map-wrap{position:relative}
+.africa{width:100%;height:auto;display:block;overflow:visible}
+.africa .countries path{fill:var(--surface-2);stroke:var(--line);stroke-width:.8;transition:fill .3s,stroke .3s}
+.africa .countries path:hover{fill:color-mix(in srgb,var(--primary) 10%,var(--surface-2))}
+.africa .countries path.on{fill:color-mix(in srgb,var(--primary) 26%,var(--surface-2));stroke:var(--primary);stroke-width:1.1}
+.africa .countries path.on{cursor:pointer}
+.africa .countries path.on:hover{fill:color-mix(in srgb,var(--primary) 38%,var(--surface-2))}
+.africa .pin{cursor:pointer;outline:none}
+.africa .pin .hit{fill:transparent}
+.africa .pin .dot{fill:var(--primary);stroke:var(--surface);stroke-width:2.5;transition:r .25s}
+.africa .pin .pulse{fill:none;stroke:var(--primary);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:pinPulse 2.4s ease-out infinite}
+.africa .pin:nth-child(3n) .pulse{animation-delay:.8s}.africa .pin:nth-child(3n+1) .pulse{animation-delay:1.6s}
+.africa .pin .pulse{animation-duration:3s}
+.africa .pin .count{font-size:9.5px}
+@keyframes pinPulse{0%{transform:scale(1);opacity:.8}100%{transform:scale(3.4);opacity:0}}
+.africa .pin .count{fill:#fff;font-size:9px;font-weight:800;text-anchor:middle;font-family:var(--font-inter),sans-serif;pointer-events:none}
+.africa .pin .tag{opacity:0;transition:opacity .25s;pointer-events:none}
+.africa .pin .tag rect{fill:var(--text)}
+.africa .pin .tag text{fill:var(--bg);font-size:11.5px;font-weight:600;font-family:var(--font-inter),sans-serif}
+.africa .pin:hover .tag,.africa .pin:focus-visible .tag,.africa .pin.sel .tag{opacity:1}
+.africa .pin.sel .dot{fill:var(--yellow);stroke:var(--primary)}
+.africa .pin.sel .count{fill:var(--black)}
+.africa .pin:focus-visible .dot{stroke:var(--yellow);stroke-width:3}
+.map-badge{position:absolute;top:0;left:0;z-index:2;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .75rem;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--primary) 40%,var(--line));color:var(--text);font-size:.75rem;font-weight:600}
+.map-badge .i{width:14px;height:14px;color:var(--primary)}
+.map-panel{align-self:stretch;display:flex;flex-direction:column;min-height:420px;max-height:640px}
+.map-empty{margin:auto 0;display:grid;gap:.8rem;justify-items:start;animation:fadeUp .5s var(--ease) both}
+.map-empty h3{font-size:1.5rem;font-weight:800}
+.map-empty p{color:var(--muted)}
+.map-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;width:100%;margin-top:.8rem;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--line)}
+.map-stats div{background:var(--surface-2);padding:1.1rem;text-align:center}
+.map-stats strong{display:block;font-size:2.2rem;font-weight:900;letter-spacing:-.04em;line-height:1.1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.map-stats span{font-size:.8rem;color:var(--muted)}
+.map-detail{display:flex;flex-direction:column;min-height:0;flex:1;animation:fadeUp .45s var(--ease) both}
+.map-detail-head{display:flex;justify-content:space-between;align-items:start;gap:1rem;padding-bottom:1rem;border-bottom:1px solid var(--line)}
+.map-detail-head h3{font-size:1.4rem;font-weight:800;margin-top:.5rem}
+.map-detail-head .theme-toggle{width:36px;height:36px;flex-shrink:0}
+.map-detail-head .theme-toggle svg{width:16px;height:16px}
+.map-items{display:grid;gap:.8rem;padding-top:1rem;overflow-y:auto;padding-right:.3rem}
+.map-item{padding:1.1rem 1.2rem;border-radius:16px;border:1px solid var(--line);background:var(--surface-2)}
+.map-item-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.map-item h4{font-size:1.08rem;font-weight:700;margin:.5rem 0 .35rem}
+.map-item p{font-size:.88rem;color:var(--muted)}
+.map-item-meta{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin-top:.7rem;font-size:.8rem;color:var(--muted)}
+.map-item-meta span{display:inline-flex;align-items:center;gap:.35rem}
+.map-item-meta .i{width:14px;height:14px;color:var(--primary)}
+.map-item .tags{padding-top:.8rem}
+@media(max-width:900px){.map-card{grid-template-columns:minmax(0,1fr)}.map-panel{min-height:0;max-height:none}.map-empty{margin:0}}
+@media (prefers-reduced-motion:reduce){.africa .pin .pulse{display:none}}
+
 /* ============ App extras ============ */
 .logo img{height:44px;width:auto}
 .site-foot .logo img{height:54px}

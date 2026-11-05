@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Contact from "@/components/Contact";
+import AfricaMap from "@/components/Contact/AfricaMap";
 import PageHero from "@/components/ui/PageHero";
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function ContactPage() {
       />
       <section style={{ paddingTop: 0 }}>
         <Contact />
+        <AfricaMap />
       </section>
     </>
   );

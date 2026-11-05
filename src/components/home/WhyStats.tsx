@@ -52,20 +52,29 @@ export function Why() {
   );
 }
 
+/** theParse has been building software since 2013. */
+export const FOUNDED_YEAR = 2013;
+
+// Evaluated in the browser (this is a client component and the counter only animates
+// client-side), so the value stays current even though pages are statically generated.
+const yearsOfExperience = () => new Date().getFullYear() - FOUNDED_YEAR;
+
 const stats = [
   { v: 50, suffix: "+", label: "Projects completed", grad: true },
   { v: 30, suffix: "+", label: "Happy clients" },
-  { v: 8, suffix: "", label: "Years of experience" },
+  { v: yearsOfExperience, suffix: "+", label: `Established in ${FOUNDED_YEAR}` },
   { v: 98, suffix: "%", label: "Success rate", grad: true },
 ];
 
-function Counter({ to, suffix, grad }: { to: number; suffix: string; grad?: boolean }) {
+/** `to` may be a function so date-based values are computed in the browser at view time. */
+function Counter({ to: target, suffix, grad }: { to: number | (() => number); suffix: string; grad?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [val, setVal] = useState(0);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const to = typeof target === "function" ? target() : target;
     if (prefersReducedMotion()) {
       setVal(to);
       return;
@@ -90,7 +99,7 @@ function Counter({ to, suffix, grad }: { to: number; suffix: string; grad?: bool
       io.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [to]);
+  }, [target]);
 
   return (
     <div ref={ref} className={`v ${grad ? "grad-text" : ""}`}>
