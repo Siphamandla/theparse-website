@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import Analytics from "@/components/Analytics";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { RevealObserver, Spotlight } from "@/components/ui/Effects";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <RevealObserver />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

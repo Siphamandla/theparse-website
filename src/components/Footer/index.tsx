@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CookieSettingsLink } from "@/components/Analytics";
 import { contactEmail, linkedinUrl } from "@/data/site";
 import NewsletterForm from "./NewsletterForm";
 
@@ -74,7 +75,9 @@ export default function Footer() {
         </div>
         <div className="big-word" aria-hidden="true">theParse</div>
         <div className="foot-bottom">
-          <span>© {new Date().getFullYear()} theParse. All rights reserved.</span>
+          <span>
+            © {new Date().getFullYear()} theParse. All rights reserved. <CookieSettingsLink />
+          </span>
           <span>
             Website by <b style={{ color: "var(--primary)" }}>theParse</b>
           </span>
