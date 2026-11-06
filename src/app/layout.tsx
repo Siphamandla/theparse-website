@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | theParse",
   },
   description:
-    "theParse is a South African software innovation company delivering bespoke software, practical AI, cloud, mobile and web solutions.",
+    "theParse is a South African software engineering company delivering bespoke software, practical AI, cloud, mobile and web solutions.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

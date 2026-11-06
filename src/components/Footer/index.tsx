@@ -43,7 +43,7 @@ export default function Footer() {
               <Image src="/images/logo/logo-2.png" alt="theParse" width={800} height={251} style={{ height: 54, width: "auto" }} />
             </Link>
             <p>
-              A South African software innovation company delivering intelligent, cloud-native,
+              A South African software engineering company delivering intelligent, cloud-native,
               mobile and web solutions powered by AI, advanced analytics, IoT and edge computing.
             </p>
             <p style={{ marginTop: ".8rem" }}>

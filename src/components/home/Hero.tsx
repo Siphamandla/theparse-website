@@ -169,7 +169,7 @@ export default function Hero() {
       <div className="wrap">
         <div>
           <div className="pill reveal">
-            <i>ZA</i> South African Software Innovation Company <span className="pulse-dot" />
+            <i>ZA</i> Engineering Africa&apos;s Digital Future <span className="pulse-dot" />
           </div>
           <h1 className="reveal d1">
             Bespoke software
