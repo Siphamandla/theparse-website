@@ -3,6 +3,7 @@ import ScrollUp from "@/components/Common/ScrollUp";
 import Contact from "@/components/Contact";
 import AfricaMap from "@/components/home/AfricaMap";
 import AiSpotlight from "@/components/home/AiSpotlight";
+import AutomationSpotlight from "@/components/home/AutomationSpotlight";
 import Hero, { Marquee } from "@/components/home/Hero";
 import Lifecycle from "@/components/home/Lifecycle";
 import ServicesBento from "@/components/home/ServicesBento";
@@ -21,6 +22,7 @@ export default function Home() {
       <Hero />
       <Marquee />
       <ServicesBento />
+      <AutomationSpotlight />
       <AiSpotlight />
       <Lifecycle />
       <Why />

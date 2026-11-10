@@ -6,7 +6,7 @@ import PageHero from "@/components/ui/PageHero";
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Web, mobile, eCommerce, AI, data, cloud and IoT services from theParse: bespoke software built to scale.",
+    "Web, mobile, eCommerce, workflow automation, AI, data, cloud and IoT services from theParse: bespoke software built to scale.",
 };
 
 export default function ServicesPage() {

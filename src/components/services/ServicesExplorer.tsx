@@ -2,8 +2,26 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Arrow } from "@/components/ui/Icon";
+import { Arrow, IconBox, type IconName } from "@/components/ui/Icon";
 import { servicesExplorer } from "@/data/site";
+
+/** Highlight card shown at the top of a tab that has its own dedicated page. */
+const featured: Record<string, { href: string; icon: IconName; title: string; text: string; cta: string }> = {
+  Automate: {
+    href: "/automation",
+    icon: "flow",
+    title: "Workflow Automation",
+    text: "Sometimes the smartest upgrade is a simpler process. We streamline and automate how work flows today, cutting steps, retyping and delays, so any AI you add later has a solid foundation.",
+    cta: "Explore workflow automation",
+  },
+  AI: {
+    href: "/ai",
+    icon: "brain",
+    title: "AI Services",
+    text: "Practical AI for customer assistants, document capture and forecasting, plus bespoke AI solutions, added where it pays off. See all eight services with real examples.",
+    cta: "Explore AI services",
+  },
+};
 
 export default function ServicesExplorer() {
   const cats = Object.keys(servicesExplorer);
@@ -19,12 +37,17 @@ export default function ServicesExplorer() {
         ))}
       </div>
       <div className="svc-view" key={cat}>
-        {cat === "AI" && (
-          <Link href="/ai" className="card ai-banner" style={{ gridColumn: "1/-1" }}>
-            <span className="eyebrow">Dedicated page</span>
-            <h3>
-              See all eight AI services, with real examples <Arrow />
-            </h3>
+        {featured[cat] && (
+          <Link href={featured[cat].href} className="card offer feat" style={{ gridColumn: "1/-1" }}>
+            <div className="top">
+              <IconBox name={featured[cat].icon} />
+              <span className="num">Featured / {cat}</span>
+            </div>
+            <h3>{featured[cat].title}</h3>
+            <p style={{ maxWidth: "62ch" }}>{featured[cat].text}</p>
+            <span className="btn btn-primary" style={{ marginTop: "1.4rem", alignSelf: "flex-start" }}>
+              {featured[cat].cta} <Arrow />
+            </span>
           </Link>
         )}
         {servicesExplorer[cat].map((s, i) => (

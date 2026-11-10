@@ -16,6 +16,7 @@ const columns = [
   {
     title: "Services",
     links: [
+      { label: "Workflow automation", href: "/automation" },
       { label: "AI services", href: "/ai" },
       { label: "Cloud migration", href: "/services" },
       { label: "Mobile & web", href: "/services" },
