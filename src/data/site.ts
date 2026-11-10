@@ -9,8 +9,8 @@ export const navLinks = [
 
 export const contactEmail = "info@theparse.co.za";
 
-/** theParse company page on LinkedIn. Update once the page is live. */
-export const linkedinUrl = "https://www.linkedin.com/company/theparse";
+export const linkedinUrl =
+  process.env.NEXT_PUBLIC_LINKEDIN_URL || "https://www.linkedin.com/company/theparse";
 
 /**
  * Services offered in the contact form. `value` is stored in MongoDB and
