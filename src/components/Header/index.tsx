@@ -69,6 +69,9 @@ export default function Header() {
               <span className="i-sun"><Icon name="sun" /></span>
               <span className="i-moon"><Icon name="moon" /></span>
             </button>
+            <Link href="/portal/signin" className="nav-login">
+              Client login
+            </Link>
             <Link href="/contact" className="btn btn-primary">
               Start a project <Arrow />
             </Link>
@@ -90,6 +93,7 @@ export default function Header() {
             {l.title}
           </Link>
         ))}
+        <Link href="/portal/signin">Client login</Link>
         <Link href="/contact" className="btn btn-primary">
           Start a project <Arrow />
         </Link>

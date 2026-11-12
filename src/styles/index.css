@@ -65,12 +65,13 @@ section{position:relative;padding:clamp(5rem,10vw,8rem) 0}
 .dark .i-sun,html:not(.dark) .i-moon{display:none}
 .nav .btn{padding:.7rem 1.2rem}
 .burger{display:none}
+.nav-login{font-size:.9rem;font-weight:600;color:var(--muted);padding:.5rem .4rem;transition:color .25s}.nav-login:hover{color:var(--text)}
 .mobile-menu{position:fixed;inset:0;z-index:79;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(18px);display:flex;flex-direction:column;justify-content:center;gap:.4rem;padding:6rem 2rem 2rem;opacity:0;pointer-events:none;transition:opacity .35s}
 .mobile-menu.open{opacity:1;pointer-events:auto}
 .mobile-menu a{font-size:2rem;font-weight:800;letter-spacing:-.03em;padding:.4rem 0;color:var(--muted);transition:color .2s}
 .mobile-menu a.active,.mobile-menu a:hover{color:var(--text)}
 .mobile-menu .btn{font-size:1rem;margin-top:1.5rem;align-self:flex-start;color:#fff}
-@media(max-width:900px){.nav-links{display:none}.nav .btn-primary{display:none}.burger{display:grid}}
+@media(max-width:900px){.nav-links{display:none}.nav .btn-primary{display:none}.nav-login{display:none}.burger{display:grid}}
 
 /* ============ Backgrounds ============ */
 .grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,#000 30%,transparent 75%);pointer-events:none}
