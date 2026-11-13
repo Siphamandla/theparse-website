@@ -1,6 +1,7 @@
 /** Client portal limits and settings, in one place. */
 
-export const DB_NAME = "theParse";
+/** MongoDB database the whole app uses, from the DB_NAME environment variable ("theParse" if unset). */
+export const DB_NAME = process.env.DB_NAME?.trim() || "theParse";
 
 /** Default lifetime of an invite link. Admins can pick another per invite. */
 export const INVITE_DAYS_DEFAULT = 7;

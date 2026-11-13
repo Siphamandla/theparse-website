@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb'; // MongoDB connection
+import { DB_NAME } from '@/lib/portal/config';
 import sendEmail from "@/lib/sendgrid"; // Email sending functionality
 import { socialLinksHtml, withSocialText } from "@/lib/email-social";
 
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
     const { email } = body; // Extract email from the request body
 
     const client = await clientPromise;  // Await MongoDB client connection
-    const db = client.db('theParse');
+    const db = client.db(DB_NAME);
     const collection = db.collection('subscribers');
 
     // Check if an email already exists in the database

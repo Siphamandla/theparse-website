@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { DB_NAME } from "@/lib/portal/config";
 import sendEmail from "@/lib/sendgrid";
 import { socialLinksHtml, withSocialText } from "@/lib/email-social";
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
   const { email, name, message, products } = body;
 
     const client = await clientPromise;
-  const db = client.db("theParse");
+  const db = client.db(DB_NAME);
   const collection = db.collection("contacts-us");
 
     // Check if an email already exists in the database
