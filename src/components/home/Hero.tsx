@@ -204,7 +204,7 @@ export default function Hero() {
 
 export function Marquee() {
   const items = [
-    "Advanced analytics", "Artificial intelligence", "IoT & IIoT", "Edge computing",
+    "Advanced analytics", "Workflow automation", "Artificial intelligence", "IoT & IIoT", "Edge computing",
     "Cloud-native", "Mobile apps", "Web platforms", "eCommerce", "Digital transformation",
   ];
   return (

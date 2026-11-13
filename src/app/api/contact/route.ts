@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import sendEmail from "@/lib/sendgrid";
+import { socialLinksHtml, withSocialText } from "@/lib/email-social";
 
 type ContactProduct = {
   label: string;
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
       bcc: "",
       replyTo: email,
       subject: `New Contact Form Submission from ${name}`,
-      plainTextContent: generatePlainTextEmail({ name, email, message, products }),
+      plainTextContent: withSocialText(generatePlainTextEmail({ name, email, message, products })),
       htmlContent: generateHtmlEmail({ name, email, message, products }),
     });
 
@@ -61,10 +62,10 @@ export async function POST(request: Request) {
       cc: "",
       bcc: "",
       subject: "We Received Your Inquiry - TheParse",
-      plainTextContent: generateUserConfirmationEmail({
+      plainTextContent: withSocialText(generateUserConfirmationEmail({
         name,
         submissionId: result.insertedId.toString(),
-      }),
+      })),
       htmlContent: generateUserConfirmationHtmlEmail({
         name,
         submissionId: result.insertedId.toString(),
@@ -170,6 +171,7 @@ function generateHtmlEmail({
         </div>
         <div class="footer">
           <p>This is an automated email from your contact form.</p>
+          <div style="margin-top: 12px;">${socialLinksHtml("center")}</div>
         </div>
       </div>
     </div>
@@ -250,6 +252,7 @@ function generateUserConfirmationHtmlEmail({
           <p>Best regards,</p>
           <p><strong>The TheParse Team</strong></p>
           <p style="margin-top: 10px; color: #999;">This is an automated confirmation email. Please do not reply directly to this address.</p>
+          <div style="margin-top: 12px;">${socialLinksHtml("center")}</div>
         </div>
       </div>
     </div>

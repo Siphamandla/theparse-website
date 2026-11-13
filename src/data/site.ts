@@ -1,6 +1,7 @@
 export const navLinks = [
   { title: "Home", path: "/" },
   { title: "Services", path: "/services" },
+  { title: "Automation", path: "/automation" },
   { title: "AI", path: "/ai", badge: "New" },
   { title: "About", path: "/about" },
   { title: "Policies", path: "/policies" },
@@ -21,6 +22,7 @@ export const serviceOptions = [
   { value: "website_development", label: "Website Development" },
   { value: "mobile_development", label: "Mobile Application Development" },
   { value: "iot_integration", label: "IoT, IIoT" },
+  { value: "workflow_automation", label: "Workflow Automation" },
   { value: "ai_customer_assistant", label: "AI Customer Assistant" },
   { value: "ai_document_automation", label: "AI Admin & Document Automation" },
   { value: "ai_forecasting", label: "AI Forecasting & Insights" },
@@ -38,6 +40,12 @@ export const servicesExplorer: Record<string, { title: string; desc: string }[]>
     { title: "Mobile Application Development", desc: "Bespoke iOS and Android apps with seamless, responsive interfaces." },
     { title: "eCommerce Platform", desc: "Online stores and commerce flows tailored to how you sell." },
     { title: "Fullstack Development", desc: "End-to-end systems that run efficiently behind the scenes." },
+  ],
+  Automate: [
+    { title: "Process Mapping & Audit", desc: "Map how work really flows today and find the bottlenecks worth fixing first." },
+    { title: "Approvals & Handoffs", desc: "Digital approval flows with clear owners, reminders and an audit trail." },
+    { title: "System Integration", desc: "Connect your accounting, CRM, email and spreadsheets so data flows without retyping." },
+    { title: "Notifications & Scheduled Reports", desc: "Event-driven reminders and reports that build and send themselves." },
   ],
   AI: [
     { title: "AI Customer Assistants", desc: "Chat assistants on your website or WhatsApp that answer questions, take bookings and hand over to your team." },

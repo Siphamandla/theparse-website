@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb'; // MongoDB connection
 import sendEmail from "@/lib/sendgrid"; // Email sending functionality
+import { socialLinksHtml, withSocialText } from "@/lib/email-social";
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
       cc: "",
       bcc: process.env.THEPARSE_CONTACTUS_BCC || "", // Ensure BCC is available if required
       subject: "Welcome to theParse",
-      plainTextContent: `Thanks for subscribing to theParse updates. We'll keep you posted on new insights, products, and events.`,
+      plainTextContent: withSocialText(`Thanks for subscribing to theParse updates. We'll keep you posted on new insights, products, and events.`),
       htmlContent: `
 <!DOCTYPE html>
 <html>
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
         <div class="footer">
           <p>Best regards,</p>
           <p><strong>The theParse Team</strong></p>
+          <div style="margin-top: 12px;">${socialLinksHtml("center")}</div>
         </div>
       </div>
     </div>

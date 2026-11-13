@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import Analytics from "@/components/Analytics";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import { RevealObserver, Spotlight } from "@/components/ui/Effects";
 import { Providers } from "./providers";
 import "../styles/index.css";
 
@@ -24,21 +20,16 @@ export const metadata: Metadata = {
     "theParse is a South African software engineering company delivering bespoke software, practical AI, cloud, mobile and web solutions.",
 };
 
+/**
+ * Root layout: shared by the marketing site, the client portal and the admin
+ * area. Site chrome (header, footer, analytics) lives in app/(site)/layout.tsx
+ * so it never loads on /portal or /admin.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html suppressHydrationWarning lang="en" className={`${inter.variable} ${mono.variable}`}>
       <body>
-        <noscript>
-          <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>
-        </noscript>
-        <Providers>
-          <Spotlight />
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <RevealObserver />
-        </Providers>
-        <Analytics />
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
