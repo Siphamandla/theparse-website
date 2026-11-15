@@ -118,10 +118,14 @@ export default async function PortalProject({ params }: { params: { projectId: s
             {owing ? <span className="pt-muted" style={{ fontSize: 13 }}>{formatMoney(owing)} outstanding</span> : null}
           </div>
           {invoices.length ? (
+            <p className="pt-muted" style={{ fontSize: 13, margin: 0 }}>Invoices are payable as agreed in the terms of this project&apos;s signed contract.</p>
+          ) : null}
+          {invoices.length ? (
             <div className="pt-list">
               {invoices.map((i) => {
                 const s = invoiceDisplayStatus(i);
                 const bal = balanceCents(i);
+                const contract = i.contractId ? contracts.find((k) => k._id.equals(i.contractId!)) : undefined;
                 return (
                   <div key={i._id.toString()} className="pt-item">
                     <span className="pt-item-main">
@@ -129,6 +133,12 @@ export default async function PortalProject({ params }: { params: { projectId: s
                       <span className="pt-muted" style={{ display: "block", fontSize: 12 }}>
                         {bal > 0 ? `${formatMoney(bal)} due ${formatDate(i.dueAt)}` : i.paidAt ? `Paid ${formatDate(i.paidAt)}` : `Issued ${formatDate(i.issuedAt)}`}
                       </span>
+                      {contract ? (
+                        <span className="pt-muted" style={{ display: "block", fontSize: 12 }}>
+                          Payable per the terms of{" "}
+                          <FileLink className="pt-link" fileKey={contract.fileKey} name={contract.fileName}>{contract.title}</FileLink>
+                        </span>
+                      ) : null}
                     </span>
                     {bal > 0 && i.payUrl ? (
                       <a className="pt-link" style={{ fontSize: 13 }} href={i.payUrl} target="_blank" rel="noopener noreferrer">Pay now →</a>

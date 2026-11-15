@@ -225,16 +225,29 @@ export async function sendProjectEmail(opts: { to: string[]; orgName: string; na
 }
 
 /** Tells a client's owners/admins about a new invoice. */
-export async function sendInvoiceEmail(opts: { to: string[]; orgName: string; projectName?: string; number: string; amount: string; dueAt: Date; url: string }) {
+export async function sendInvoiceEmail(opts: {
+  to: string[];
+  orgName: string;
+  projectName?: string;
+  /** The signed contract the invoice is billed under; its terms govern payment. */
+  contractTitle: string;
+  contractSignedAt?: Date;
+  number: string;
+  amount: string;
+  dueAt: Date;
+  url: string;
+}) {
+  const signed = opts.contractSignedAt ? `, signed on ${formatDate(opts.contractSignedAt)}` : "";
   if (!opts.to.length) return;
   const html = layout(
     `Invoice ${opts.number}`,
     [
       p(`theParse has issued invoice <b>${esc(opts.number)}</b> to ${esc(opts.orgName)}${opts.projectName ? ` for the <b>${esc(opts.projectName)}</b> project` : ""}: <b>${esc(opts.amount)}</b>, due on <b>${esc(formatDate(opts.dueAt))}</b>.`),
+      p(`This invoice is payable as agreed in the terms of the contract <b>${esc(opts.contractTitle)}</b>${esc(signed)}.`),
       button(opts.url, "View invoice"),
     ].join(""),
   );
-  const text = `Invoice ${opts.number}${opts.projectName ? ` (${opts.projectName})` : ""} for ${opts.amount}, due ${formatDate(opts.dueAt)}.\n\nView: ${opts.url}`;
+  const text = `Invoice ${opts.number}${opts.projectName ? ` (${opts.projectName})` : ""} for ${opts.amount}, due ${formatDate(opts.dueAt)}.\n\nThis invoice is payable as agreed in the terms of the contract "${opts.contractTitle}"${signed}.\n\nView: ${opts.url}`;
   // One email per person, so recipients don't see each other's addresses.
   await Promise.all(opts.to.map((to) => sendEmail({ to, subject: `Invoice ${opts.number} from theParse`, htmlContent: html, plainTextContent: text })));
 }

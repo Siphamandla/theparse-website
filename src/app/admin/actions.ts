@@ -693,7 +693,17 @@ export async function createInvoice(formData: FormData): Promise<ActionResult> {
   if (formData.get("notify") === "1") {
     const to = await decisionMakers(org._id);
     try {
-      await sendInvoiceEmail({ to, orgName: org.name, projectName: project.name, number, amount, dueAt, url: `${siteUrl()}/portal/invoices` });
+      await sendInvoiceEmail({
+        to,
+        orgName: org.name,
+        projectName: project.name,
+        contractTitle: contract.title,
+        contractSignedAt: contract.signedAt,
+        number,
+        amount,
+        dueAt,
+        url: `${siteUrl()}/portal/projects/${project._id.toString()}`,
+      });
       emailed = to.length ? ` and emailed to ${to.length} ${to.length === 1 ? "person" : "people"}` : "";
     } catch (err) {
       console.error("❌ [Portal] Invoice email failed", err);

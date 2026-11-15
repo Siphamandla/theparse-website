@@ -26,7 +26,16 @@ export default async function PortalInvoices() {
     c.contracts.countDocuments({ orgId: org._id, status: "signed" }),
     c.contracts.countDocuments({ orgId: org._id, status: "awaiting_signature" }),
     c.projects.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; name: string }>({ name: 1 }).toArray(),
-    c.contracts.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; projectId?: import("mongodb").ObjectId }>({ projectId: 1 }).toArray(),
+    c.contracts
+      .find({ orgId: org._id })
+      .project<{ _id: import("mongodb").ObjectId; projectId?: import("mongodb").ObjectId; title: string; fileKey: string; fileName: string; signedAt?: Date }>({
+        projectId: 1,
+        title: 1,
+        fileKey: 1,
+        fileName: 1,
+        signedAt: 1,
+      })
+      .toArray(),
   ]);
   /** An invoice's project, falling back to its contract's for invoices made before projects. */
   const projectOf = (i: (typeof invoices)[number]) => {
@@ -34,6 +43,8 @@ export default async function PortalInvoices() {
     const project = pid ? projects.find((p) => p._id.equals(pid)) : undefined;
     return project ? { name: project.name, href: projectHref(project._id) } : undefined;
   };
+
+  const contractOf = (i: (typeof invoices)[number]) => (i.contractId ? contracts.find((k) => k._id.equals(i.contractId!)) : undefined);
 
   const head = (
     <div className="pt-head">
@@ -82,6 +93,7 @@ export default async function PortalInvoices() {
           <h2 className="pt-h2">All invoices</h2>
           <span className="pt-muted" style={{ fontSize: 13 }}>{invoices.length} total</span>
         </div>
+        <p className="pt-terms">Each invoice is payable as agreed in the terms of the contract you signed for that project.</p>
         {invoices.length === 0 ? (
           <div className="pt-dt-empty">Invoices from theParse will appear here.</div>
         ) : (
@@ -102,6 +114,12 @@ export default async function PortalInvoices() {
                           <b>{i.number}</b>
                           {i.fileKey ? (
                             <FileLink className="pt-link pt-dt-file" fileKey={i.fileKey} name={i.fileName ?? `${i.number}.pdf`}>View invoice</FileLink>
+                          ) : null}
+                          {contractOf(i) ? (
+                            <span>
+                              Payable per the terms of{" "}
+                              <FileLink className="pt-link" fileKey={contractOf(i)!.fileKey} name={contractOf(i)!.fileName}>{contractOf(i)!.title}</FileLink>
+                            </span>
                           ) : null}
                           <span>Added {formatTimestamp(i.createdAt)}</span>
                         </div>
