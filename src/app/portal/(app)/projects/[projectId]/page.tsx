@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileTableRow } from "@/components/portal/FileLink";
+import FileLink, { FileTableRow } from "@/components/portal/FileLink";
 import { toObjectId } from "@/lib/portal/db";
 import {
   balanceCents,
@@ -19,6 +19,7 @@ import {
 } from "@/lib/portal/format";
 import { clientProjects, projectDates } from "@/lib/portal/project-data";
 import { requireMember } from "@/lib/portal/session";
+import AcceptContract from "../../contracts/AcceptContract";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: { params: { projectId: string
 }
 
 export default async function PortalProject({ params }: { params: { projectId: string } }) {
-  const { org } = await requireMember();
+  const { org, user } = await requireMember();
   const id = toObjectId(params.projectId);
   if (!id) notFound();
   // Scoped to the signed-in member's client, so other clients' projects are a 404.
@@ -56,8 +57,8 @@ export default async function PortalProject({ params }: { params: { projectId: s
 
       {waiting.length ? (
         <div className="pt-alert info" role="status">
-          {waiting.length === 1 ? `"${waiting[0].title}" is` : `${waiting.length} contracts are`} waiting for you to review and accept.{" "}
-          <Link className="pt-link" href="/portal/contracts">Review now →</Link>
+          {waiting.length === 1 ? `"${waiting[0].title}" is` : `${waiting.length} contracts are`} waiting for you to sign.{" "}
+          <a className="pt-link" href="#contracts">Sign below ↓</a>
         </div>
       ) : null}
 
@@ -69,7 +70,7 @@ export default async function PortalProject({ params }: { params: { projectId: s
       ) : null}
 
       <div className="pt-grid">
-        <section className="pt-card">
+        <section className="pt-card" id="contracts">
           <div className="pt-between">
             <h2 className="pt-h2">Contracts</h2>
             {contracts.length ? <Link className="pt-link" style={{ fontSize: 13 }} href="/portal/contracts">All contracts →</Link> : null}
@@ -77,15 +78,32 @@ export default async function PortalProject({ params }: { params: { projectId: s
           {contracts.length ? (
             <div className="pt-list">
               {contracts.map((k) => (
-                <div key={k._id.toString()} className="pt-item">
+                <div key={k._id.toString()} className="pt-item" style={{ flexWrap: "wrap" }}>
                   <span className="pt-item-main">
                     {k.title}
-                    <span className="pt-muted" style={{ display: "block", fontSize: 12 }}>Sent {formatDate(k.sentAt)}</span>
+                    <span className="pt-muted" style={{ display: "block", fontSize: 12 }}>
+                      {k.status === "signed" && k.signedAt
+                        ? `Signed ${formatDate(k.signedAt)}${k.acceptance ? ` by ${k.acceptance.typedName}` : ""}`
+                        : `Sent ${formatDate(k.sentAt)}`}
+                    </span>
+                    <span className="pt-row" style={{ gap: 12, marginTop: 4, fontSize: 13 }}>
+                      <FileLink className="pt-link" fileKey={k.fileKey} name={k.fileName}>Open contract</FileLink>
+                      {k.signedFileKey ? (
+                        <FileLink className="pt-link" fileKey={k.signedFileKey} name={k.signedFileName ?? "Signed copy"}>Signed copy</FileLink>
+                      ) : null}
+                    </span>
                   </span>
-                  {k.status === "awaiting_signature" ? (
-                    <Link className="pt-link" style={{ fontSize: 13 }} href="/portal/contracts">Review and accept →</Link>
-                  ) : null}
                   <span className={`pt-status ${contractTone[k.status]}`} style={{ fontSize: 12 }}>{contractStatusLabel[k.status]}</span>
+                  {k.status === "awaiting_signature" ? (
+                    <AcceptContract
+                      contractId={k._id.toString()}
+                      title={k.title}
+                      note={k.note}
+                      fileKey={k.fileKey}
+                      fileName={k.fileName}
+                      defaultName={user.name && !user.name.includes("@") ? user.name : ""}
+                    />
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -122,7 +140,7 @@ export default async function PortalProject({ params }: { params: { projectId: s
             </div>
           ) : (
             <div className="pt-empty">
-              {contracts.some((k) => k.status === "signed") ? "No invoices for this project yet." : "Invoices appear here once this project's contract is accepted."}
+              {contracts.some((k) => k.status === "signed") ? "No invoices for this project yet." : "Invoices appear here once this project's contract is signed."}
             </div>
           )}
         </section>

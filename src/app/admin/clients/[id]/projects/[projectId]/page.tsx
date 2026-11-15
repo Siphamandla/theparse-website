@@ -97,7 +97,7 @@ export default async function ClientProject({
         <div>
           <h2 className="pt-h2">Send a contract for this project</h2>
           <p className="pt-muted" style={{ fontSize: 13, marginTop: 4 }}>
-            {org.name} reviews and accepts it in their portal. You&apos;ll get an email when they do, and invoicing opens.
+            {org.name} signs it in their portal: a signed copy, their agreement and their typed name are all required. You&apos;ll get an email when they do, and invoicing opens.
           </p>
         </div>
         {!storageConfigured() ? (

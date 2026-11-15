@@ -102,7 +102,7 @@ export default async function PortalOverview({ searchParams }: { searchParams: {
         const toAccept = contracts.filter((k) => k.status === "awaiting_signature").length;
         const owing = invoices.reduce((sum, i) => sum + balanceCents(i), 0);
         const facts = [
-          toAccept ? { text: `${toAccept} contract${toAccept === 1 ? "" : "s"} to accept`, hot: true } : null,
+          toAccept ? { text: `${toAccept} contract${toAccept === 1 ? "" : "s"} to sign`, hot: true } : null,
           owing ? { text: `${formatMoney(owing)} due`, hot: true } : null,
           { text: `${files.length} ${files.length === 1 ? "document" : "documents"}`, hot: false },
         ].filter((f): f is { text: string; hot: boolean } => Boolean(f));

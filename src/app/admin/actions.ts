@@ -563,16 +563,6 @@ async function contractFor(formData: FormData) {
   return { c, contract: id ? await c.contracts.findOne({ _id: id }) : null };
 }
 
-export async function markContractSigned(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const { actor } = await staff();
-  const { c, contract } = await contractFor(formData);
-  if (!contract) return fail("Contract not found.");
-  await c.contracts.updateOne({ _id: contract._id }, { $set: { status: "signed", signedAt: new Date(), signedBy: actor } });
-  await audit({ orgId: contract.orgId, actor, action: "contract.marked_accepted", detail: contract.title });
-  billingPaths(contract.orgId.toString());
-  return ok("Marked as accepted");
-}
-
 export async function reopenContract(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const { actor } = await staff();
   const { c, contract } = await contractFor(formData);
@@ -580,7 +570,7 @@ export async function reopenContract(_prev: ActionResult, formData: FormData): P
   if (await c.invoices.findOne({ contractId: contract._id, status: { $ne: "void" } })) {
     return fail("This contract has invoices against it. Cancel those first.");
   }
-  await c.contracts.updateOne({ _id: contract._id }, { $set: { status: "awaiting_signature" }, $unset: { signedAt: "", signedBy: "", acceptance: "" } });
+  await c.contracts.updateOne({ _id: contract._id }, { $set: { status: "awaiting_signature" }, $unset: { signedAt: "", signedBy: "", acceptance: "", signedFileKey: "", signedFileName: "" } });
   await c.documents.updateOne({ key: contract.fileKey }, { $set: { sharedWithClient: true } });
   await audit({ orgId: contract.orgId, actor, action: "contract.reopened", detail: contract.title });
   billingPaths(contract.orgId.toString());

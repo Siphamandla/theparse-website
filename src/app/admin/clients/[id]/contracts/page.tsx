@@ -27,7 +27,7 @@ export default async function ClientContracts({ params }: { params: { id: string
         <div>
           <h2 className="pt-h2">Send a contract</h2>
           <p className="pt-muted" style={{ fontSize: 13, marginTop: 4 }}>
-            Every contract belongs to one of {org.name}&apos;s projects. They review and accept it in their portal (or upload a paper-signed copy). You&apos;ll get an email when they do, and invoicing opens.
+            Every contract belongs to one of {org.name}&apos;s projects. To sign, they must attach a signed copy, confirm they agree and type their full name in the portal. You&apos;ll get an email when they do, and invoicing opens.
           </p>
         </div>
         {!storageConfigured() ? (

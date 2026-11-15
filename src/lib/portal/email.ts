@@ -2,7 +2,7 @@ import "server-only";
 import { socialLinksHtml, uniqueFooterMarker, withSocialText } from "@/lib/email-social";
 import sendRawEmail from "@/lib/sendgrid";
 import { notifyEmail, siteUrl } from "./config";
-import { formatDate } from "./format";
+import { formatDate, formatDateTime } from "./format";
 
 /** Escapes text for HTML email bodies. Every user-supplied value goes through this. */
 export function esc(value: unknown) {
@@ -157,13 +157,51 @@ export async function sendContractEmail(opts: { to: string[]; orgName: string; p
     [
       p(`theParse has shared <b>${esc(opts.title)}</b>${opts.projectName ? ` for the <b>${esc(opts.projectName)}</b> project` : ""} with ${esc(opts.orgName)} on the client portal.`),
       opts.note ? quote("Note", opts.note) : "",
-      p("Review it, sign it, and upload the signed copy from the Contracts page."),
-      button(opts.url, "Review contract"),
+      p("To sign it, open it on the Contracts page, attach your signed copy, confirm you agree and type your full name."),
+      button(opts.url, "Review and sign"),
     ].join(""),
   );
   const text = `theParse has shared "${opts.title}" with ${opts.orgName}.\n\n${opts.note ? `${opts.note}\n\n` : ""}Review and sign: ${opts.url}`;
   // One email per person, so recipients don't see each other's addresses.
   await Promise.all(opts.to.map((to) => sendEmail({ to, subject: `Contract to sign: ${opts.title}`, htmlContent: html, plainTextContent: text })));
+}
+
+/**
+ * Confirms a signed contract to the client: the person who signed, plus their company's owners
+ * and admins. Lists what was recorded, so they have a record of signing in their inbox.
+ */
+export async function sendContractSignedEmail(opts: {
+  to: string[];
+  orgName: string;
+  title: string;
+  projectName?: string;
+  typedName: string;
+  signedAt: Date;
+  signedCopyName: string;
+  url: string;
+}) {
+  if (!opts.to.length) return { sent: 0, failed: 0 };
+  const when = formatDateTime(opts.signedAt);
+  const html = layout(
+    "Contract signed",
+    [
+      p(`<b>${esc(opts.title)}</b>${opts.projectName ? ` for the <b>${esc(opts.projectName)}</b> project` : ""} has been signed for ${esc(opts.orgName)}. Thank you.`),
+      quote(
+        "What we recorded",
+        [`Signed by: ${opts.typedName}`, `Date and time: ${when}`, `Signed copy: ${opts.signedCopyName}`].join("\n"),
+      ),
+      p("You can open the contract and your signed copy at any time in the client portal. theParse will be in touch about next steps and invoicing."),
+      button(opts.url, "View contract"),
+      small("Didn't sign this? Reply to this email or contact info@theparse.co.za straight away."),
+    ].join(""),
+  );
+  const text = `"${opts.title}"${opts.projectName ? ` (${opts.projectName})` : ""} has been signed for ${opts.orgName}.\n\nSigned by: ${opts.typedName}\nDate and time: ${when}\nSigned copy: ${opts.signedCopyName}\n\nView it: ${opts.url}\n\nDidn't sign this? Contact info@theparse.co.za straight away.`;
+  // One email per person, so recipients don't see each other's addresses.
+  const results = await Promise.all(
+    opts.to.map((to) => sendEmail({ to, subject: `Signed: ${opts.title}`, htmlContent: html, plainTextContent: text })),
+  );
+  const sent = results.filter((r) => r.success).length;
+  return { sent, failed: results.length - sent };
 }
 
 /** Tells a client's people that theParse has set up a project for them. */

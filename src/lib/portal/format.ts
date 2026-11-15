@@ -110,7 +110,7 @@ export const invoiceStatusLabel: Record<InvoiceDisplayStatus, string> = { due: "
 export const invoiceTone: Record<InvoiceDisplayStatus, string> = { due: "warn", part_paid: "info", overdue: "bad", paid: "ok", void: "neutral" };
 export const paymentMethodLabel = { eft: "EFT", card: "Card", cash: "Cash", other: "Other" } as const;
 
-export const contractStatusLabel = { awaiting_signature: "Awaiting acceptance", signed: "Accepted", void: "Cancelled" } as const;
+export const contractStatusLabel = { awaiting_signature: "Awaiting signature", signed: "Signed", void: "Cancelled" } as const;
 export const contractTone = { awaiting_signature: "warn", signed: "ok", void: "neutral" } as const;
 
 export const PROJECT_STATUSES = ["planning", "in_progress", "on_hold", "completed", "cancelled"] as const;

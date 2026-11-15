@@ -51,13 +51,13 @@ export default async function PortalInvoices() {
         {head}
         <section className="pt-card">
           <div className="pt-gate">
-            <b>Accept your contract first</b>
+            <b>Sign your contract first</b>
             <span>
               {awaiting
-                ? "theParse has sent you a contract. Once you've reviewed and accepted it, your invoices and payments will appear here."
-                : "Once theParse sends your contract and you accept it, your invoices and payments will appear here."}
+                ? "theParse has sent you a contract. Once you've signed it, your invoices and payments will appear here."
+                : "Once theParse sends your contract and you sign it, your invoices and payments will appear here."}
             </span>
-            {awaiting ? <Link className="pt-paybtn" style={{ alignSelf: "flex-start", marginTop: 6 }} href="/portal/contracts">Review contract</Link> : null}
+            {awaiting ? <Link className="pt-paybtn" style={{ alignSelf: "flex-start", marginTop: 6 }} href="/portal/contracts">Sign contract</Link> : null}
           </div>
         </section>
       </>

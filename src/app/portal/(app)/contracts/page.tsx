@@ -27,7 +27,7 @@ export default async function PortalContracts() {
           <h1 className="pt-h1">Contracts</h1>
           <p className="pt-sub">
             {waiting.length
-              ? `${waiting.length} ${waiting.length === 1 ? "contract is" : "contracts are"} waiting for you. Review and accept to get started. Invoicing begins once a contract is accepted.`
+              ? `${waiting.length} ${waiting.length === 1 ? "contract is" : "contracts are"} waiting for you. Open each one, sign it and attach your signed copy. Invoicing begins once a contract is signed.`
               : "Agreements between theParse and " + org.name + "."}
           </p>
         </div>
@@ -39,7 +39,7 @@ export default async function PortalContracts() {
           <span className="pt-muted" style={{ fontSize: 13 }}>{contracts.length} total</span>
         </div>
         {contracts.length === 0 ? (
-          <div className="pt-dt-empty">Contracts from theParse will appear here when they&apos;re ready for you to accept.</div>
+          <div className="pt-dt-empty">Contracts from theParse will appear here when they&apos;re ready for you to sign.</div>
         ) : (
           <div className="pt-dt-wrap">
             <table className="pt-dt-table">
