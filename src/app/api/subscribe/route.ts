@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import getMongoClient from '@/lib/mongodb'; // MongoDB connection
 import { DB_NAME } from '@/lib/portal/config';
 import sendEmail from "@/lib/sendgrid"; // Email sending functionality
-import { socialLinksHtml, withSocialText } from "@/lib/email-social";
+import { socialLinksHtml, uniqueFooterMarker, withSocialText } from "@/lib/email-social";
 
 export async function POST(request: Request) {
   try {
@@ -56,6 +56,7 @@ export async function POST(request: Request) {
           <p>Best regards,</p>
           <p><strong>The theParse Team</strong></p>
           <div style="margin-top: 12px;">${socialLinksHtml("center")}</div>
+          ${uniqueFooterMarker()}
         </div>
       </div>
     </div>

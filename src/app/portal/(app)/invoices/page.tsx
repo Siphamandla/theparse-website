@@ -12,6 +12,7 @@ import {
   paidCents,
   formatTimestamp,
 } from "@/lib/portal/format";
+import { projectHref } from "@/lib/portal/project-data";
 import { requireMember } from "@/lib/portal/session";
 
 export const metadata: Metadata = { title: "Invoices" };
@@ -30,7 +31,8 @@ export default async function PortalInvoices() {
   /** An invoice's project, falling back to its contract's for invoices made before projects. */
   const projectOf = (i: (typeof invoices)[number]) => {
     const pid = i.projectId ?? contracts.find((k) => i.contractId && k._id.equals(i.contractId))?.projectId;
-    return pid ? projects.find((p) => p._id.equals(pid))?.name : undefined;
+    const project = pid ? projects.find((p) => p._id.equals(pid)) : undefined;
+    return project ? { name: project.name, href: projectHref(project._id) } : undefined;
   };
 
   const head = (
@@ -105,7 +107,7 @@ export default async function PortalInvoices() {
                         </div>
                       </td>
                       <td className="pt-dt-muted" data-label="Project">
-                        {projectOf(i) ? <Link className="pt-link" href="/portal?view=projects">{projectOf(i)}</Link> : "—"}
+                        {projectOf(i) ? <Link className="pt-link" href={projectOf(i)!.href}>{projectOf(i)!.name}</Link> : "—"}
                       </td>
                       <td data-label="Amount">
                         {formatMoney(i.amountCents)}

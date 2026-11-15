@@ -1,5 +1,5 @@
 import "server-only";
-import { socialLinksHtml, withSocialText } from "@/lib/email-social";
+import { socialLinksHtml, uniqueFooterMarker, withSocialText } from "@/lib/email-social";
 import sendRawEmail from "@/lib/sendgrid";
 import { notifyEmail, siteUrl } from "./config";
 import { formatDate } from "./format";
@@ -35,6 +35,7 @@ function layout(heading: string, body: string) {
       <div style="padding:18px 32px;border-top:1px solid #E3E8EF;font-size:12px;color:#5b6475">
         <div style="margin:0 0 12px">${socialLinksHtml()}</div>
         theParse · South Africa · <a href="${base}/policies/privacy-policy" style="color:#c2410c">Privacy policy</a>
+        ${uniqueFooterMarker()}
       </div>
     </div>
   </div>
@@ -79,7 +80,9 @@ export async function sendClientInviteEmail(opts: {
     ].join(""),
   );
   const text = `${intro} you to the theParse client portal.\n\n${opts.note ? `${NOTE_HEADING}:\n${opts.note}\n\n` : ""}Complete your details: ${opts.url}\n\nThis link works once and expires on ${formatDate(opts.expiresAt)}.`;
-  return sendEmail({ to: opts.to, subject: "You're invited to the theParse client portal", htmlContent: html, plainTextContent: text });
+  // Naming the company keeps invites to different companies out of one Gmail thread.
+  const subject = opts.company ? `${opts.company}: you're invited to the theParse client portal` : "You're invited to the theParse client portal";
+  return sendEmail({ to: opts.to, subject, htmlContent: html, plainTextContent: text });
 }
 
 export async function sendTeamInviteEmail(opts: {

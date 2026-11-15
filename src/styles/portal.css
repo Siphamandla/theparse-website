@@ -377,6 +377,8 @@ a.pt-stat-link:hover{border-color:var(--primary)}
 .pt-dt-two{padding:10px 0}
 .pt-status.info{color:var(--pt-info)}
 /* accept-contract dialog: document left, form right */
+/* Dialogs are rendered inside table cells (nowrap, right-aligned); don't inherit that. */
+.pt-preview{white-space:normal;text-align:left}
 .pt-accept-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 340px}
 .pt-accept-doc{position:relative;min-height:0;background:var(--surface-2);border-right:1px solid var(--line)}
 .pt-accept-doc iframe{width:100%;height:100%;border:0;background:#fff}
@@ -419,3 +421,15 @@ a.pt-stat-link:hover{border-color:var(--primary)}
 @media (max-width:1100px){.pt-kpis .pt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.pt-kpis .pt-stats{grid-template-columns:1fr}}
 .pt-kpis .pt-stat b{font-size:24px;white-space:nowrap}
+
+/* Client portal: project grid (Overview → Projects) */
+.pt-projgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:20px;align-items:stretch}
+.pt-projcard{display:flex;flex-direction:column;gap:12px;min-width:0;padding:22px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
+.pt-projcard:hover{border-color:var(--primary)}
+.pt-projcard:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.pt-projcard .pt-h2{overflow-wrap:anywhere}
+.pt-projcard-desc{margin:0;font-size:14px;line-height:1.55;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.pt-projcard-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--muted)}
+.pt-projcard-foot .hot{color:var(--pt-warn);font-weight:700}
+.pt-projcard-open{margin-left:auto;font-weight:700;color:var(--primary)}
+@media (prefers-reduced-motion:no-preference){.pt-projcard:hover{transform:translateY(-1px)}}

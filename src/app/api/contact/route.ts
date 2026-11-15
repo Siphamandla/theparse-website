@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import getMongoClient from "@/lib/mongodb";
 import { DB_NAME } from "@/lib/portal/config";
 import sendEmail from "@/lib/sendgrid";
-import { socialLinksHtml, withSocialText } from "@/lib/email-social";
+import { socialLinksHtml, uniqueFooterMarker, withSocialText } from "@/lib/email-social";
 
 type ContactProduct = {
   label: string;
@@ -173,6 +173,7 @@ function generateHtmlEmail({
         <div class="footer">
           <p>This is an automated email from your contact form.</p>
           <div style="margin-top: 12px;">${socialLinksHtml("center")}</div>
+          ${uniqueFooterMarker()}
         </div>
       </div>
     </div>
@@ -254,6 +255,7 @@ function generateUserConfirmationHtmlEmail({
           <p><strong>The TheParse Team</strong></p>
           <p style="margin-top: 10px; color: #999;">This is an automated confirmation email. Please do not reply directly to this address.</p>
           <div style="margin-top: 12px;">${socialLinksHtml("center")}</div>
+          ${uniqueFooterMarker()}
         </div>
       </div>
     </div>

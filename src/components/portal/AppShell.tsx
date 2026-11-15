@@ -7,7 +7,8 @@ import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
 import Icon, { type IconName } from "./icons";
 
-export type SubLink = { label: string; href: string; count?: number; hot?: boolean };
+/** `activeFor`: a path prefix whose pages also highlight this link (e.g. a list's detail pages). */
+export type SubLink = { label: string; href: string; count?: number; hot?: boolean; activeFor?: string };
 /** `when` is a regex source matched against the pathname; the group only shows when it matches. */
 export type SubGroup = { title?: string; items: SubLink[]; when?: string };
 export type RailSection = {
@@ -34,7 +35,8 @@ type Props = {
 };
 
 const inSection = (s: RailSection, path: string) =>
-  s.exact ? path === s.href : path === s.href || path.startsWith(`${s.href}/`);
+  (s.exact ? path === s.href : path === s.href || path.startsWith(`${s.href}/`)) ||
+  s.groups.some((g) => g.items.some((l) => l.activeFor && path.startsWith(l.activeFor)));
 
 export default function AppShell(p: Props) {
   const pathname = usePathname();
@@ -60,8 +62,9 @@ export default function AppShell(p: Props) {
   });
   // Only compare a query param (?status= filters, ?view= sub-views) when this section's links use it.
   const filterKey = ["status", "view"].find((k) => links.some((l) => resolve(l.href).searchParams.has(k)));
-  const isOn = (href: string) => {
-    const u = resolve(href);
+  const isOn = (link: SubLink) => {
+    if (link.activeFor && pathname.startsWith(link.activeFor)) return true;
+    const u = resolve(link.href);
     if (u.pathname !== pathname) return false;
     if (u.hash) return u.hash === hash;
     if (anchorHit) return false;
@@ -116,7 +119,7 @@ export default function AppShell(p: Props) {
           <div key={g.title ?? gi} className="pt-panel-group">
             {g.title ? <div className="pt-panel-sec">{g.title}</div> : null}
             {g.items.map((l) => {
-              const on = isOn(l.href);
+              const on = isOn(l);
               return (
                 <Link
                   key={l.href}

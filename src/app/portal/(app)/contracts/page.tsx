@@ -3,6 +3,7 @@ import Link from "next/link";
 import FileLink from "@/components/portal/FileLink";
 import { collections } from "@/lib/portal/db";
 import { contractStatusLabel, contractTone, formatDate, formatTimestamp } from "@/lib/portal/format";
+import { projectHref } from "@/lib/portal/project-data";
 import { requireMember } from "@/lib/portal/session";
 import AcceptContract from "./AcceptContract";
 
@@ -62,7 +63,7 @@ export default async function PortalContracts() {
                       </div>
                     </td>
                     <td className="pt-dt-muted" data-label="Project">
-                      {projectName(k.projectId) ? <Link className="pt-link" href="/portal?view=projects">{projectName(k.projectId)}</Link> : "—"}
+                      {k.projectId && projectName(k.projectId) ? <Link className="pt-link" href={projectHref(k.projectId)}>{projectName(k.projectId)}</Link> : "—"}
                     </td>
                     <td data-label="Status">
                       <span className={`pt-status ${contractTone[k.status]}`}>{contractStatusLabel[k.status]}</span>

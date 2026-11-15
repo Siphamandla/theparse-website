@@ -405,7 +405,7 @@ export async function createProject(_prev: ActionResult, formData: FormData): Pr
       .map((u) => u.email)
       .filter(Boolean);
     try {
-      const r = await sendProjectEmail({ to, orgName: org.name, name: f.name, description: f.description, url: `${siteUrl()}/portal?view=projects` });
+      const r = await sendProjectEmail({ to, orgName: org.name, name: f.name, description: f.description, url: `${siteUrl()}/portal/projects/${insertedId.toString()}` });
       emailed = r.failed ? `, but ${r.failed} of ${to.length} emails failed to send` : r.sent ? ` and emailed to ${r.sent} ${r.sent === 1 ? "person" : "people"}` : "";
     } catch (err) {
       console.error("❌ [Portal] Project email failed", err);

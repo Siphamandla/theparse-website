@@ -1,4 +1,16 @@
+import { randomUUID } from "crypto";
 import { linkedinUrl } from "@/data/site";
+
+/**
+ * An invisible, different-every-time snippet for the very end of an email's footer.
+ *
+ * Gmail hides content it has already shown in earlier emails from the same sender behind a
+ * "•••" button. Our footers are identical in every email, so without this they get collapsed.
+ * Unique trailing content stops Gmail from treating the footer as repeated text.
+ */
+export function uniqueFooterMarker() {
+  return `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px" aria-hidden="true">${randomUUID()}</div>`;
+}
 
 /**
  * Social links for every outgoing email.
@@ -24,5 +36,8 @@ export function socialLinksHtml(align: "left" | "center" = "left") {
 /** The same links for plain-text emails. */
 export const socialLinksText = () => `Follow theParse on LinkedIn: ${linkedinUrl}`;
 
-/** Appends the social links to a plain-text email body. */
-export const withSocialText = (text: string) => `${text.trimEnd()}\n\n--\n${socialLinksText()}`;
+/**
+ * Appends the social links to a plain-text email body. No "--" line before them: that's the
+ * standard signature marker, and email apps hide or trim everything after it.
+ */
+export const withSocialText = (text: string) => `${text.trimEnd()}\n\n${socialLinksText()}`;
