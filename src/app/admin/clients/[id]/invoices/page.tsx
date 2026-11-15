@@ -1,34 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import ActionButton from "@/components/portal/ActionButton";
-import FileLink from "@/components/portal/FileLink";
 import { collections } from "@/lib/portal/db";
-import {
-  balanceCents,
-  formatDate,
-  formatMoney,
-  invoiceDisplayStatus,
-  invoiceStatusLabel,
-  invoiceTone,
-  paidCents,
-  formatTimestamp,
-} from "@/lib/portal/format";
+import { balanceCents, formatMoney, invoiceDisplayStatus, paidCents } from "@/lib/portal/format";
 import { storageConfigured } from "@/lib/portal/storage";
-import { deleteInvoice, restoreInvoice, voidInvoice } from "../../../actions";
 import { getClient } from "../data";
 import InvoiceForm from "./InvoiceForm";
-import PaymentsButton from "./PaymentsButton";
+import InvoicesTable from "./InvoicesTable";
 
 export const metadata: Metadata = { title: "Client invoices" };
 
 export default async function ClientInvoices({ params }: { params: { id: string } }) {
   const org = await getClient(params.id);
   const c = await collections();
-  const [invoices, contracts] = await Promise.all([
+  const [invoices, contracts, projects] = await Promise.all([
     c.invoices.find({ orgId: org._id }).sort({ issuedAt: -1, createdAt: -1 }).toArray(),
     c.contracts.find({ orgId: org._id }).sort({ sentAt: -1 }).toArray(),
+    c.projects.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; name: string }>({ name: 1 }).toArray(),
   ]);
-  const accepted = contracts.filter((k) => k.status === "signed");
+  const projectName = (id?: import("mongodb").ObjectId) => (id ? projects.find((p) => p._id.equals(id))?.name : undefined);
+  /** "Project: Contract title", or just the title for contracts not linked to a project. */
+  const contractLabel = (k: (typeof contracts)[number]) => (projectName(k.projectId) ? `${projectName(k.projectId)}: ${k.title}` : k.title);
+  // Only contracts linked to a project can be invoiced.
+  const accepted = contracts.filter((k) => k.status === "signed" && projectName(k.projectId));
+  const unlinkedAccepted = contracts.filter((k) => k.status === "signed" && !projectName(k.projectId));
   const awaiting = contracts.filter((k) => k.status === "awaiting_signature");
   const live = invoices.filter((i) => i.status !== "void");
   const owing = live.reduce((s, i) => s + balanceCents(i), 0);
@@ -48,19 +42,29 @@ export default async function ClientInvoices({ params }: { params: { id: string 
         <div>
           <h2 className="pt-h2">Add an invoice</h2>
           <p className="pt-muted" style={{ fontSize: 13, marginTop: 4 }}>
-            Invoices are billed under an accepted contract, so {org.name} can see and pay them in their portal.
+            Every invoice is billed under an accepted contract, and belongs to that contract&apos;s project. {org.name} sees and pays it in their portal.
           </p>
         </div>
         {accepted.length ? (
           <>
-            <InvoiceForm orgId={org._id.toString()} contracts={accepted.map((k) => ({ id: k._id.toString(), title: k.title }))} />
+            <InvoiceForm
+              orgId={org._id.toString()}
+              contracts={accepted.map((k) => ({ id: k._id.toString(), title: contractLabel(k) }))}
+            />
+            {unlinkedAccepted.length ? (
+              <p className="pt-muted" style={{ fontSize: 13 }}>
+                {unlinkedAccepted.length} accepted contract{unlinkedAccepted.length === 1 ? " isn't" : "s aren't"} linked to a project yet, so {unlinkedAccepted.length === 1 ? "it's" : "they're"} not listed. <Link className="pt-link" href={`${base}/contracts`}>Link in Contracts →</Link>
+              </p>
+            ) : null}
             {!storageConfigured() ? <p className="pt-muted" style={{ fontSize: 13 }}>File storage isn&apos;t configured, so you can&apos;t attach PDFs yet.</p> : null}
           </>
         ) : (
           <div className="pt-gate">
-            <b>Waiting for an accepted contract</b>
+            <b>{unlinkedAccepted.length ? "Link the accepted contract to a project" : "Waiting for an accepted contract"}</b>
             <span>
-              {awaiting.length
+              {unlinkedAccepted.length
+                ? `Invoices are per project. Link "${unlinkedAccepted[0].title}"${unlinkedAccepted.length > 1 ? ` and ${unlinkedAccepted.length - 1} more` : ""} to a project to invoice under it.`
+                : awaiting.length
                 ? `${org.name} hasn't accepted ${awaiting.length === 1 ? `"${awaiting[0].title}"` : "any of their contracts"} yet. Invoicing and payments open once they do.`
                 : `Send ${org.name} a contract first. Invoicing and payments open once they accept it.`}
             </span>
@@ -74,89 +78,7 @@ export default async function ClientInvoices({ params }: { params: { id: string 
           <h2 className="pt-h2">Invoices</h2>
           <span className="pt-muted" style={{ fontSize: 13 }}>{invoices.length} total</span>
         </div>
-        {invoices.length === 0 ? (
-          <div className="pt-dt-empty">No invoices yet.</div>
-        ) : (
-          <div className="pt-dt-wrap">
-            <table className="pt-dt-table">
-              <thead>
-                <tr><th>Invoice</th><th>Amount</th><th>Balance</th><th>Due</th><th>Status</th><th><span className="pt-sr">Actions</span></th></tr>
-              </thead>
-              <tbody>
-                {invoices.map((i) => {
-                  const id = i._id.toString();
-                  const s = invoiceDisplayStatus(i);
-                  const contract = i.contractId ? contracts.find((k) => k._id.equals(i.contractId!)) : null;
-                  const bal = balanceCents(i);
-                  return (
-                    <tr key={id}>
-                      <td>
-                        <div className="pt-dt-two">
-                          <b>{i.number}</b>
-                          {i.fileKey ? (
-                            <FileLink className="pt-link pt-dt-file" fileKey={i.fileKey} name={i.fileName ?? `${i.number}.pdf`}>{i.fileName ?? "Invoice PDF"}</FileLink>
-                          ) : (
-                            <span>No PDF attached</span>
-                          )}
-                          {contract ? <span>{contract.title}</span> : null}
-                          <span>Added {formatTimestamp(i.createdAt)}</span>
-                        </div>
-                      </td>
-                      <td data-label="Amount" style={{ fontWeight: 600 }}>
-                        {formatMoney(i.amountCents)}
-                        <div className="pt-dt-sub">Issued {formatDate(i.issuedAt)}</div>
-                      </td>
-                      <td data-label="Balance" className={bal && i.status !== "void" ? undefined : "pt-dt-muted"}>
-                        {i.status === "void" ? "—" : formatMoney(bal)}
-                        {paidCents(i) && i.status !== "void" ? <div className="pt-dt-sub">{formatMoney(paidCents(i))} paid</div> : null}
-                      </td>
-                      <td className={s === "overdue" ? "pt-dt-bad" : "pt-dt-muted"} data-label="Due">{formatDate(i.dueAt)}</td>
-                      <td data-label="Status">
-                        <span className={`pt-status ${invoiceTone[s]}`}>{invoiceStatusLabel[s]}</span>
-                        {i.paidAt ? <div className="pt-dt-sub">{formatDate(i.paidAt)}</div> : null}
-                      </td>
-                      <td>
-                        <div className="pt-dt-act">
-                          {i.status !== "void" ? (
-                            <PaymentsButton
-                              invoiceId={id}
-                              number={i.number}
-                              amountCents={i.amountCents}
-                              balanceCents={bal}
-                              canRecord={contract?.status === "signed"}
-                              blockedReason={
-                                contract
-                                  ? `"${contract.title}" is no longer accepted, so payments can't be recorded against this invoice.`
-                                  : "This invoice isn't linked to an accepted contract, so payments can't be recorded."
-                              }
-                              payments={(i.payments ?? []).map((p) => ({
-                                id: p.id,
-                                amountCents: p.amountCents,
-                                paidAt: p.paidAt.toISOString(),
-                                method: p.method,
-                                reference: p.reference,
-                                recordedBy: p.recordedBy.name,
-                                recordedAt: p.recordedAt.toISOString(),
-                              }))}
-                            />
-                          ) : (
-                            <ActionButton action={restoreInvoice} id={id} label="Restore" className="pt-dt-btn quiet-neutral" />
-                          )}
-                          {i.status !== "void" && !paidCents(i) ? (
-                            <ActionButton action={voidInvoice} id={id} label="Cancel" className="pt-dt-btn quiet-neutral" confirm={`Cancel invoice ${i.number}? It will disappear from the client's portal.`} />
-                          ) : null}
-                          {!paidCents(i) ? (
-                            <ActionButton action={deleteInvoice} id={id} label="Delete" className="pt-dt-btn quiet" confirm={`Delete invoice ${i.number}? This can't be undone.`} />
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <InvoicesTable invoices={invoices} contracts={contracts} projects={projects.map((p) => ({ id: p._id.toString(), name: p.name }))} />
       </section>
     </>
   );

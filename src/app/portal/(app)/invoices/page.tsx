@@ -20,11 +20,18 @@ export const dynamic = "force-dynamic";
 export default async function PortalInvoices() {
   const { org } = await requireMember();
   const c = await collections();
-  const [invoices, accepted, awaiting] = await Promise.all([
+  const [invoices, accepted, awaiting, projects, contracts] = await Promise.all([
     c.invoices.find({ orgId: org._id, status: { $ne: "void" } }).sort({ issuedAt: -1, createdAt: -1 }).toArray(),
     c.contracts.countDocuments({ orgId: org._id, status: "signed" }),
     c.contracts.countDocuments({ orgId: org._id, status: "awaiting_signature" }),
+    c.projects.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; name: string }>({ name: 1 }).toArray(),
+    c.contracts.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; projectId?: import("mongodb").ObjectId }>({ projectId: 1 }).toArray(),
   ]);
+  /** An invoice's project, falling back to its contract's for invoices made before projects. */
+  const projectOf = (i: (typeof invoices)[number]) => {
+    const pid = i.projectId ?? contracts.find((k) => i.contractId && k._id.equals(i.contractId))?.projectId;
+    return pid ? projects.find((p) => p._id.equals(pid))?.name : undefined;
+  };
 
   const head = (
     <div className="pt-head">
@@ -79,7 +86,7 @@ export default async function PortalInvoices() {
           <div className="pt-dt-wrap">
             <table className="pt-dt-table">
               <thead>
-                <tr><th>Invoice</th><th>Amount</th><th>Balance</th><th>Due</th><th>Status</th><th><span className="pt-sr">Actions</span></th></tr>
+                <tr><th>Invoice</th><th>Project</th><th>Amount</th><th>Balance</th><th>Due</th><th>Status</th><th><span className="pt-sr">Actions</span></th></tr>
               </thead>
               <tbody>
                 {invoices.map((i) => {
@@ -96,6 +103,9 @@ export default async function PortalInvoices() {
                           ) : null}
                           <span>Added {formatTimestamp(i.createdAt)}</span>
                         </div>
+                      </td>
+                      <td className="pt-dt-muted" data-label="Project">
+                        {projectOf(i) ? <Link className="pt-link" href="/portal?view=projects">{projectOf(i)}</Link> : "—"}
                       </td>
                       <td data-label="Amount">
                         {formatMoney(i.amountCents)}

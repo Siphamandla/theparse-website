@@ -147,12 +147,12 @@ export async function notifyStaff(subject: string, lines: string[], link?: { url
 }
 
 /** Tells a client's owners/admins that a contract is waiting for their signature. */
-export async function sendContractEmail(opts: { to: string[]; orgName: string; title: string; note?: string; url: string }) {
+export async function sendContractEmail(opts: { to: string[]; orgName: string; projectName?: string; title: string; note?: string; url: string }) {
   if (!opts.to.length) return;
   const html = layout(
     "A contract is ready for you",
     [
-      p(`theParse has shared <b>${esc(opts.title)}</b> with ${esc(opts.orgName)} on the client portal.`),
+      p(`theParse has shared <b>${esc(opts.title)}</b>${opts.projectName ? ` for the <b>${esc(opts.projectName)}</b> project` : ""} with ${esc(opts.orgName)} on the client portal.`),
       opts.note ? quote("Note", opts.note) : "",
       p("Review it, sign it, and upload the signed copy from the Contracts page."),
       button(opts.url, "Review contract"),
@@ -163,17 +163,37 @@ export async function sendContractEmail(opts: { to: string[]; orgName: string; t
   await Promise.all(opts.to.map((to) => sendEmail({ to, subject: `Contract to sign: ${opts.title}`, htmlContent: html, plainTextContent: text })));
 }
 
+/** Tells a client's people that theParse has set up a project for them. */
+export async function sendProjectEmail(opts: { to: string[]; orgName: string; name: string; description?: string; url: string }) {
+  if (!opts.to.length) return { sent: 0, failed: 0 };
+  const html = layout(
+    "Your project is live",
+    [
+      p(`theParse has set up <b>${esc(opts.name)}</b> for ${esc(opts.orgName)} on the client portal.`),
+      opts.description ? quote("About this project", opts.description) : "",
+      p("You can follow its status and find its documents on the Projects page."),
+      button(opts.url, "View project"),
+    ].join(""),
+  );
+  const text = `theParse has set up "${opts.name}" for ${opts.orgName}.\n\n${opts.description ? `${opts.description}\n\n` : ""}View it: ${opts.url}`;
+  const results = await Promise.all(
+    opts.to.map((to) => sendEmail({ to, subject: `New project: ${opts.name}`, htmlContent: html, plainTextContent: text })),
+  );
+  const sent = results.filter((r) => r.success).length;
+  return { sent, failed: results.length - sent };
+}
+
 /** Tells a client's owners/admins about a new invoice. */
-export async function sendInvoiceEmail(opts: { to: string[]; orgName: string; number: string; amount: string; dueAt: Date; url: string }) {
+export async function sendInvoiceEmail(opts: { to: string[]; orgName: string; projectName?: string; number: string; amount: string; dueAt: Date; url: string }) {
   if (!opts.to.length) return;
   const html = layout(
     `Invoice ${opts.number}`,
     [
-      p(`theParse has issued invoice <b>${esc(opts.number)}</b> to ${esc(opts.orgName)} for <b>${esc(opts.amount)}</b>, due on <b>${esc(formatDate(opts.dueAt))}</b>.`),
+      p(`theParse has issued invoice <b>${esc(opts.number)}</b> to ${esc(opts.orgName)}${opts.projectName ? ` for the <b>${esc(opts.projectName)}</b> project` : ""}: <b>${esc(opts.amount)}</b>, due on <b>${esc(formatDate(opts.dueAt))}</b>.`),
       button(opts.url, "View invoice"),
     ].join(""),
   );
-  const text = `Invoice ${opts.number} for ${opts.amount}, due ${formatDate(opts.dueAt)}.\n\nView: ${opts.url}`;
+  const text = `Invoice ${opts.number}${opts.projectName ? ` (${opts.projectName})` : ""} for ${opts.amount}, due ${formatDate(opts.dueAt)}.\n\nView: ${opts.url}`;
   // One email per person, so recipients don't see each other's addresses.
   await Promise.all(opts.to.map((to) => sendEmail({ to, subject: `Invoice ${opts.number} from theParse`, htmlContent: html, plainTextContent: text })));
 }

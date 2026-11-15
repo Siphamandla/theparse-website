@@ -13,7 +13,7 @@ export default async function ClientLayout({ children, params }: { children: Rea
   const org = await getClient(params.id);
   const orgId = org._id.toString();
   const c = await collections();
-  const [docs, submission, people, notes, contracts, awaiting, invoices, unpaid, allContracts, allInvoices] = await Promise.all([
+  const [docs, submission, people, notes, contracts, awaiting, invoices, unpaid, allContracts, allInvoices, projects] = await Promise.all([
     c.documents.countDocuments({ orgId: org._id, ...generalDocs }),
     c.submissions.findOne({ orgId: org._id }, { projection: { attachments: 1 }, sort: { createdAt: -1 } }),
     c.memberships.countDocuments({ orgId: org._id }),
@@ -24,11 +24,13 @@ export default async function ClientLayout({ children, params }: { children: Rea
     c.invoices.countDocuments({ orgId: org._id, status: "unpaid" }),
     c.contracts.countDocuments({ orgId: org._id }),
     c.invoices.countDocuments({ orgId: org._id }),
+    c.projects.countDocuments({ orgId: org._id }),
   ]);
   const base = `/admin/clients/${orgId}`;
   const n = (count: number, one: string, many = `${one}s`) => (count ? `${count} ${count === 1 ? one : many}` : null);
   const deleteSummary = [
     n(people, "team member"),
+    n(projects, "project"),
     n(docs + (submission?.attachments.length ?? 0), "document"),
     n(allContracts, "contract"),
     n(allInvoices, "invoice"),
@@ -65,6 +67,7 @@ export default async function ClientLayout({ children, params }: { children: Rea
         label={`${org.name} sections`}
         tabs={[
           { href: base, label: "Overview" },
+          { href: `${base}/projects`, label: "Projects", count: projects },
           { href: `${base}/documents`, label: "Documents", count: docs + (submission?.attachments.length ?? 0) },
           // Totals; orange when something is waiting (acceptance / payment).
           { href: `${base}/contracts`, label: "Contracts", count: contracts, hot: awaiting > 0, hint: awaiting ? `${awaiting} awaiting acceptance` : undefined },

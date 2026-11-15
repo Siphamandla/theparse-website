@@ -23,10 +23,12 @@ const ext = (name: string) => (name.split(".").pop() ?? "").slice(0, 4).toUpperC
 export default async function ClientDocuments({ params }: { params: { id: string } }) {
   const org = await getClient(params.id);
   const c = await collections();
-  const [docs, submission] = await Promise.all([
+  const [docs, submission, projects] = await Promise.all([
     c.documents.find({ orgId: org._id, ...generalDocs }).sort({ createdAt: -1 }).toArray(),
     c.submissions.findOne({ orgId: org._id }, { sort: { createdAt: -1 } }),
+    c.projects.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; name: string }>({ name: 1 }).toArray(),
   ]);
+  const projectName = (id?: import("mongodb").ObjectId) => (id ? projects.find((p) => p._id.equals(id))?.name : undefined);
   const onboarding = submission?.attachments ?? [];
   const total = docs.length + onboarding.length;
 
@@ -61,7 +63,7 @@ export default async function ClientDocuments({ params }: { params: { id: string
                     <td>
                       <FileLink className="pt-dt-who" fileKey={d.key} name={d.name} type={d.type}>
                         <span className="pt-ext">{ext(d.name)}</span>
-                        <div><b className="pt-dt-name">{d.name}</b><span>{formatBytes(d.size)}</span></div>
+                        <div><b className="pt-dt-name">{d.name}</b><span>{formatBytes(d.size)}{projectName(d.projectId) ? ` · ${projectName(d.projectId)}` : ""}</span></div>
                       </FileLink>
                     </td>
                     <td className="pt-dt-muted" data-label="Added by">{d.uploadedBy.name}</td>

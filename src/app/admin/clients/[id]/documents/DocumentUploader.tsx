@@ -10,7 +10,7 @@ const ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg";
 const MAX_BYTES = 25 * 1024 * 1024;
 
 /** Drop or pick files; each goes straight to storage, then gets recorded against the client. */
-export default function DocumentUploader({ orgId, enabled }: { orgId: string; enabled: boolean }) {
+export default function DocumentUploader({ orgId, projectId, enabled }: { orgId: string; projectId?: string; enabled: boolean }) {
   const [items, setItems] = useState<Item[]>([]);
   const [shared, setShared] = useState(true);
   const [over, setOver] = useState(false);
@@ -35,6 +35,7 @@ export default function DocumentUploader({ orgId, enabled }: { orgId: string; en
 
       const fd = new FormData();
       fd.set("orgId", orgId);
+      if (projectId) fd.set("projectId", projectId);
       fd.set("key", data.key);
       fd.set("name", file.name);
       fd.set("shared", shared ? "1" : "0");

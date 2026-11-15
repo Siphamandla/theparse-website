@@ -9,7 +9,7 @@ import { createInvoice } from "../../../actions";
 const iso = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 
 /** Record an invoice for the client, with an optional PDF and payment link. */
-export default function InvoiceForm({ orgId, contracts }: { orgId: string; contracts: { id: string; title: string }[] }) {
+export default function InvoiceForm({ orgId, projectId, contracts }: { orgId: string; projectId?: string; contracts: { id: string; title: string }[] }) {
   const form = useRef<HTMLFormElement>(null);
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState<ActionResult>(null);
@@ -22,6 +22,7 @@ export default function InvoiceForm({ orgId, contracts }: { orgId: string; contr
     const file = fd.get("file");
     fd.delete("file");
     fd.set("orgId", orgId);
+    if (projectId) fd.set("projectId", projectId);
     setBusy(true);
     setState(null);
     if (file instanceof File && file.size) {

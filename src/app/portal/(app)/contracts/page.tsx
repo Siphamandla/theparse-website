@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import FileLink from "@/components/portal/FileLink";
 import { collections } from "@/lib/portal/db";
 import { contractStatusLabel, contractTone, formatDate, formatTimestamp } from "@/lib/portal/format";
@@ -10,10 +11,12 @@ export const dynamic = "force-dynamic";
 
 export default async function PortalContracts() {
   const { org, user } = await requireMember();
-  const contracts = await (await collections()).contracts
-    .find({ orgId: org._id, status: { $ne: "void" } })
-    .sort({ sentAt: -1 })
-    .toArray();
+  const c = await collections();
+  const [contracts, projects] = await Promise.all([
+    c.contracts.find({ orgId: org._id, status: { $ne: "void" } }).sort({ sentAt: -1 }).toArray(),
+    c.projects.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; name: string }>({ name: 1 }).toArray(),
+  ]);
+  const projectName = (id?: import("mongodb").ObjectId) => (id ? projects.find((p) => p._id.equals(id))?.name : undefined);
   const waiting = contracts.filter((k) => k.status === "awaiting_signature");
 
   return (
@@ -40,7 +43,7 @@ export default async function PortalContracts() {
           <div className="pt-dt-wrap">
             <table className="pt-dt-table">
               <thead>
-                <tr><th>Contract</th><th>Status</th><th>Sent</th><th><span className="pt-sr">Actions</span></th></tr>
+                <tr><th>Contract</th><th>Project</th><th>Status</th><th>Sent</th><th><span className="pt-sr">Actions</span></th></tr>
               </thead>
               <tbody>
                 {contracts.map((k) => (
@@ -57,6 +60,9 @@ export default async function PortalContracts() {
                         ) : null}
                         {k.note ? <span className="pt-dt-note">{k.note}</span> : null}
                       </div>
+                    </td>
+                    <td className="pt-dt-muted" data-label="Project">
+                      {projectName(k.projectId) ? <Link className="pt-link" href="/portal?view=projects">{projectName(k.projectId)}</Link> : "—"}
                     </td>
                     <td data-label="Status">
                       <span className={`pt-status ${contractTone[k.status]}`}>{contractStatusLabel[k.status]}</span>

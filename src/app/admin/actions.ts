@@ -8,10 +8,10 @@ import { fail, ok, type ActionResult } from "@/lib/portal/action-result";
 import { audit } from "@/lib/portal/audit";
 import { adminEmails, INVITE_DAY_OPTIONS, INVITE_DAYS_DEFAULT } from "@/lib/portal/config";
 import { orgFolder, recordUpload } from "@/lib/portal/files";
-import { collections, db, toObjectId, type OrgStatus } from "@/lib/portal/db";
-import { sendContractEmail, sendInvoiceEmail } from "@/lib/portal/email";
+import { collections, db, toObjectId, type OrgStatus, type ProjectStatus } from "@/lib/portal/db";
+import { sendContractEmail, sendInvoiceEmail, sendProjectEmail } from "@/lib/portal/email";
 import { siteUrl } from "@/lib/portal/config";
-import { formatMoney, isEmail, isKnownService, normaliseEmail, normaliseRegNumber, parseAmountToCents } from "@/lib/portal/format";
+import { formatMoney, isEmail, isKnownService, normaliseEmail, normaliseRegNumber, parseAmountToCents, PROJECT_STATUSES, projectStatusLabel } from "@/lib/portal/format";
 import { checkTeamEmails, createClientInvite, createTeamInvite, resendInvite, revokeInvite } from "@/lib/portal/invites";
 import { requireStaff } from "@/lib/portal/session";
 import { deleteObject, deleteObjects, listKeys, storageConfigured } from "@/lib/portal/storage";
@@ -184,6 +184,7 @@ export async function deleteOrg(_prev: ActionResult, formData: FormData): Promis
       await c.documents.deleteMany({ orgId: id }, o);
       await c.contracts.deleteMany({ orgId: id }, o);
       await c.invoices.deleteMany({ orgId: id }, o);
+      await c.projects.deleteMany({ orgId: id }, o);
       if (removableIds.length) {
         await c.sessions.deleteMany({ userId: { $in: removableIds } }, o);
         await d.collection("accounts").deleteMany({ userId: { $in: removableIds } }, o);
@@ -305,15 +306,27 @@ export async function addDocument(formData: FormData): Promise<ActionResult> {
   const orgId = toObjectId(formData.get("orgId"));
   if (!orgId) return fail("Client not found.");
   const shared = formData.get("shared") === "1";
+  let project: { _id: ObjectId; name: string } | null = null;
+  if (formData.get("projectId")) {
+    const projectId = toObjectId(formData.get("projectId"));
+    project = projectId ? await (await collections()).projects.findOne({ _id: projectId, orgId }, { projection: { name: 1 } }) : null;
+    if (!project) return fail("Project not found.");
+  }
   const res = await recordUpload({
     orgId,
     key: String(formData.get("key") ?? ""),
     name: String(formData.get("name") ?? ""),
+    projectId: project?._id,
     sharedWithClient: shared,
     by: actor,
   });
   if ("error" in res) return fail(res.error);
-  await audit({ orgId, actor, action: "document.added", detail: `${res.doc.name}${shared ? " (shared with client)" : ""}` });
+  await audit({
+    orgId,
+    actor,
+    action: "document.added",
+    detail: `${res.doc.name}${project ? ` · project ${project.name}` : ""}${shared ? " (shared with client)" : ""}`,
+  });
   docPaths(orgId.toString());
   return ok(`${res.doc.name} added`);
 }
@@ -349,6 +362,113 @@ export async function deleteDocument(_prev: ActionResult, formData: FormData): P
   return ok("Deleted");
 }
 
+/* --------------------------------------------------------------- projects */
+
+/** Reads and checks the editable project fields shared by create and update. */
+function projectFields(formData: FormData): { error: string } | {
+  name: string;
+  description?: string;
+  status: ProjectStatus;
+  startDate?: Date;
+  dueDate?: Date;
+} {
+  const name = String(formData.get("name") ?? "").trim().slice(0, 160);
+  if (!name) return { error: "Give the project a name." };
+  const description = String(formData.get("description") ?? "").trim().slice(0, 4000) || undefined;
+  const rawStatus = String(formData.get("status") ?? "planning");
+  if (!(PROJECT_STATUSES as readonly string[]).includes(rawStatus)) return { error: "Pick a status." };
+  const startDate = dateInput(formData.get("startDate")) ?? undefined;
+  const dueDate = dateInput(formData.get("dueDate")) ?? undefined;
+  if (formData.get("startDate") && !startDate) return { error: "The start date isn't valid." };
+  if (formData.get("dueDate") && !dueDate) return { error: "The due date isn't valid." };
+  if (startDate && dueDate && dueDate < startDate) return { error: "The due date can't be before the start date." };
+  return { name, description, status: rawStatus as ProjectStatus, startDate, dueDate };
+}
+
+export async function createProject(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { actor } = await staff();
+  const orgId = toObjectId(formData.get("orgId"));
+  const c = await collections();
+  const org = orgId ? await c.orgs.findOne({ _id: orgId }) : null;
+  if (!org) return fail("Client not found.");
+  const f = projectFields(formData);
+  if ("error" in f) return fail(f.error);
+
+  const now = new Date();
+  const { insertedId } = await c.projects.insertOne({ orgId: org._id, ...f, createdBy: actor, createdAt: now, updatedAt: now } as never);
+  await audit({ orgId: org._id, actor, action: "project.created", detail: f.name });
+
+  let emailed = "";
+  if (formData.get("notify") === "1") {
+    const ms = await c.memberships.find({ orgId: org._id }).project<{ userId: ObjectId }>({ userId: 1 }).toArray();
+    const to = (await c.users.find({ _id: { $in: ms.map((m) => m.userId) } }).project<{ email: string }>({ email: 1 }).toArray())
+      .map((u) => u.email)
+      .filter(Boolean);
+    try {
+      const r = await sendProjectEmail({ to, orgName: org.name, name: f.name, description: f.description, url: `${siteUrl()}/portal?view=projects` });
+      emailed = r.failed ? `, but ${r.failed} of ${to.length} emails failed to send` : r.sent ? ` and emailed to ${r.sent} ${r.sent === 1 ? "person" : "people"}` : "";
+    } catch (err) {
+      console.error("❌ [Portal] Project email failed", err);
+      emailed = ", but the email failed to send";
+    }
+  }
+  docPaths(org._id.toString());
+  redirect(`/admin/clients/${org._id.toString()}/projects/${insertedId.toString()}?created=${encodeURIComponent(`Project created${emailed}.`)}`);
+}
+
+export async function updateProject(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { actor } = await staff();
+  const id = toObjectId(formData.get("id"));
+  const c = await collections();
+  const project = id ? await c.projects.findOne({ _id: id }) : null;
+  if (!project) return fail("Project not found.");
+  const f = projectFields(formData);
+  if ("error" in f) return fail(f.error);
+
+  // Cleared optional fields are removed rather than stored as empty values.
+  const optional = ["description", "startDate", "dueDate"] as const;
+  const unset = Object.fromEntries(optional.filter((k) => f[k] === undefined).map((k) => [k, 1 as const]));
+  const set = Object.fromEntries(Object.entries({ ...f, updatedAt: new Date() }).filter(([, v]) => v !== undefined));
+  await c.projects.updateOne({ _id: project._id }, { $set: set, ...(Object.keys(unset).length ? { $unset: unset } : {}) });
+  await audit({
+    orgId: project.orgId,
+    actor,
+    action: "project.updated",
+    detail: f.status !== project.status ? `${f.name} · ${projectStatusLabel[project.status]} → ${projectStatusLabel[f.status]}` : f.name,
+  });
+  docPaths(project.orgId.toString());
+  return ok("Saved");
+}
+
+/** Deletes a project and the documents attached to it (records and stored files). */
+export async function deleteProject(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { actor } = await staff();
+  const id = toObjectId(formData.get("id"));
+  const c = await collections();
+  const project = id ? await c.projects.findOne({ _id: id }) : null;
+  if (!project) return fail("This project has already been deleted.");
+  const contracts = await c.contracts.countDocuments({ projectId: project._id });
+  if (contracts) {
+    return fail(`This project has ${contracts} contract${contracts === 1 ? "" : "s"}. Delete ${contracts === 1 ? "it" : "them"} first, or set the project to Cancelled instead.`);
+  }
+
+  const docs = await c.documents.find({ projectId: project._id }).project<{ key: string }>({ key: 1 }).toArray();
+  if (docs.length) {
+    if (!storageConfigured()) return fail("File storage isn't configured, so this project's files can't be deleted. Nothing was deleted.");
+    try {
+      await deleteObjects(docs.map((d) => d.key));
+    } catch (err) {
+      console.error("❌ [Portal] Could not delete project files", err);
+      return fail("Couldn't delete the project's files from storage. Nothing was deleted. Try again.");
+    }
+    await c.documents.deleteMany({ projectId: project._id });
+  }
+  await c.projects.deleteOne({ _id: project._id });
+  await audit({ orgId: project.orgId, actor, action: "project.deleted", detail: `${project.name} · ${docs.length} file${docs.length === 1 ? "" : "s"} removed` });
+  docPaths(project.orgId.toString());
+  redirect(`/admin/clients/${project.orgId.toString()}/projects`);
+}
+
 /* -------------------------------------------------- contracts & invoices */
 
 /** Email addresses of a client's owners and admins (the people who sign and pay). */
@@ -368,9 +488,17 @@ const billingPaths = (orgId: string) => {
 export async function createContract(formData: FormData): Promise<ActionResult> {
   const { actor } = await staff();
   const orgId = toObjectId(formData.get("orgId"));
+  const projectId = toObjectId(formData.get("projectId"));
   const c = await collections();
   const org = orgId ? await c.orgs.findOne({ _id: orgId }) : null;
   if (!org) return fail("Client not found.");
+  if (!projectId) return fail("Choose the project this contract is for.");
+  // The project decides the client: it must belong to the client this form was opened for.
+  const project = await c.projects.findOne({ _id: projectId, orgId: org._id });
+  if (!project) return fail("That project doesn't belong to this client.");
+  if (project.status === "completed" || project.status === "cancelled") {
+    return fail(`${project.name} is ${projectStatusLabel[project.status].toLowerCase()}. Reopen it to send a new contract.`);
+  }
   const title = String(formData.get("title") ?? "").trim().slice(0, 160);
   if (!title) return fail("Give the contract a title.");
   const note = String(formData.get("note") ?? "").trim().slice(0, 1000) || undefined;
@@ -387,6 +515,7 @@ export async function createContract(formData: FormData): Promise<ActionResult> 
 
   await c.contracts.insertOne({
     orgId: org._id,
+    projectId: project._id,
     title,
     note,
     status: "awaiting_signature",
@@ -395,13 +524,13 @@ export async function createContract(formData: FormData): Promise<ActionResult> 
     sentAt: new Date(),
     createdBy: actor,
   } as never);
-  await audit({ orgId: org._id, actor, action: "contract.sent", detail: title });
+  await audit({ orgId: org._id, actor, action: "contract.sent", detail: `${title} · project ${project.name}` });
 
   let emailed = "";
   if (formData.get("notify") === "1") {
     const to = await decisionMakers(org._id);
     try {
-      await sendContractEmail({ to, orgName: org.name, title, note, url: `${siteUrl()}/portal/contracts` });
+      await sendContractEmail({ to, orgName: org.name, projectName: project.name, title, note, url: `${siteUrl()}/portal/contracts` });
       emailed = to.length ? ` and emailed to ${to.length} ${to.length === 1 ? "person" : "people"}` : "";
     } catch (err) {
       console.error("❌ [Portal] Contract email failed", err);
@@ -410,6 +539,22 @@ export async function createContract(formData: FormData): Promise<ActionResult> 
   }
   billingPaths(org._id.toString());
   return ok(`Contract added${emailed}.`);
+}
+
+/** Links a contract sent before projects existed to one of the same client's projects. */
+export async function linkContractToProject(formData: FormData): Promise<void> {
+  const { actor } = await staff();
+  const c = await collections();
+  const contract = await c.contracts.findOne({ _id: toObjectId(formData.get("id")) ?? undefined });
+  const projectId = toObjectId(formData.get("projectId"));
+  if (!contract || contract.projectId || !projectId) return;
+  const project = await c.projects.findOne({ _id: projectId, orgId: contract.orgId });
+  if (!project) return;
+  await c.contracts.updateOne({ _id: contract._id, projectId: { $exists: false } }, { $set: { projectId: project._id } });
+  // Invoices billed under this contract belong to the same project.
+  await c.invoices.updateMany({ contractId: contract._id }, { $set: { projectId: project._id } });
+  await audit({ orgId: contract.orgId, actor, action: "contract.linked", detail: `${contract.title} → project ${project.name}` });
+  billingPaths(contract.orgId.toString());
 }
 
 async function contractFor(formData: FormData) {
@@ -497,6 +642,12 @@ export async function createInvoice(formData: FormData): Promise<ActionResult> {
   const contract = await c.contracts.findOne({ _id: toObjectId(formData.get("contractId")) ?? undefined, orgId: org._id });
   if (!contract) return fail(`Choose the contract this invoice is for. ${org.name} must accept a contract before you can invoice them.`);
   if (contract.status !== "signed") return fail(`"${contract.title}" hasn't been accepted yet, so it can't be invoiced.`);
+  // Invoices are per project: the project comes from the contract.
+  if (!contract.projectId) return fail(`Link "${contract.title}" to a project (Contracts tab) before invoicing under it.`);
+  const project = await c.projects.findOne({ _id: contract.projectId, orgId: org._id }, { projection: { name: 1 } });
+  if (!project) return fail(`"${contract.title}" is linked to a project that no longer exists.`);
+  const expectedProject = toObjectId(formData.get("projectId"));
+  if (expectedProject && !expectedProject.equals(project._id)) return fail("That contract belongs to a different project.");
 
   const number = String(formData.get("number") ?? "").trim().slice(0, 40);
   if (!number) return fail("Enter the invoice number.");
@@ -541,17 +692,18 @@ export async function createInvoice(formData: FormData): Promise<ActionResult> {
     payUrl,
     payments: [],
     contractId: contract._id,
+    projectId: project._id,
     createdBy: actor,
     createdAt: new Date(),
   } as never);
   const amount = formatMoney(amountCents);
-  await audit({ orgId: org._id, actor, action: "invoice.added", detail: `${number} · ${amount}` });
+  await audit({ orgId: org._id, actor, action: "invoice.added", detail: `${number} · ${amount} · project ${project.name}` });
 
   let emailed = "";
   if (formData.get("notify") === "1") {
     const to = await decisionMakers(org._id);
     try {
-      await sendInvoiceEmail({ to, orgName: org.name, number, amount, dueAt, url: `${siteUrl()}/portal/invoices` });
+      await sendInvoiceEmail({ to, orgName: org.name, projectName: project.name, number, amount, dueAt, url: `${siteUrl()}/portal/invoices` });
       emailed = to.length ? ` and emailed to ${to.length} ${to.length === 1 ? "person" : "people"}` : "";
     } catch (err) {
       console.error("❌ [Portal] Invoice email failed", err);

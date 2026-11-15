@@ -6,8 +6,19 @@ import { ACCEPT_DOCS, uploadFile } from "@/components/portal/upload";
 import type { ActionResult } from "@/lib/portal/action-result";
 import { createContract } from "../../../actions";
 
-/** Upload a contract for the client to sign. */
-export default function ContractForm({ orgId }: { orgId: string }) {
+/**
+ * Upload a contract for the client to sign. Every contract belongs to a project:
+ * pass `projectId` to fix it (project page) or `projects` to let staff pick one.
+ */
+export default function ContractForm({
+  orgId,
+  projectId,
+  projects = [],
+}: {
+  orgId: string;
+  projectId?: string;
+  projects?: { id: string; name: string }[];
+}) {
   const form = useRef<HTMLFormElement>(null);
   const [busy, setBusy] = useState(false);
   const [state, setState] = useState<ActionResult>(null);
@@ -15,6 +26,7 @@ export default function ContractForm({ orgId }: { orgId: string }) {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    if (!projectId && !fd.get("projectId")) return setState({ ok: false, message: "Choose the project this contract is for." });
     const file = fd.get("file");
     if (!(file instanceof File) || !file.size) return setState({ ok: false, message: "Choose the contract file." });
     setBusy(true);
@@ -26,6 +38,7 @@ export default function ContractForm({ orgId }: { orgId: string }) {
     }
     fd.delete("file");
     fd.set("orgId", orgId);
+    if (projectId) fd.set("projectId", projectId);
     fd.set("key", up.key);
     fd.set("name", file.name);
     const res = await createContract(fd);
@@ -36,6 +49,15 @@ export default function ContractForm({ orgId }: { orgId: string }) {
 
   return (
     <form ref={form} className="pt-form" onSubmit={onSubmit}>
+      {projectId ? null : (
+        <div>
+          <label className="pt-label" htmlFor="ct-project">Project *</label>
+          <select className="pt-input" id="ct-project" name="projectId" required defaultValue={projects.length === 1 ? projects[0].id : ""}>
+            {projects.length > 1 ? <option value="" disabled>Choose the project this contract is for</option> : null}
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+      )}
       <div className="pt-fields">
         <div>
           <label className="pt-label" htmlFor="ct-title">Title *</label>

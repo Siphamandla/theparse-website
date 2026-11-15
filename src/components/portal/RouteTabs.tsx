@@ -10,8 +10,9 @@ export default function RouteTabs({ tabs, label }: { tabs: RouteTab[]; label: st
   const pathname = usePathname();
   return (
     <nav className="pt-tabs" aria-label={label}>
-      {tabs.map((t) => {
-        const on = pathname === t.href;
+      {tabs.map((t, i) => {
+        // The first tab is the base route; the others also stay on for their sub-pages.
+        const on = pathname === t.href || (i > 0 && pathname.startsWith(`${t.href}/`));
         return (
           <Link key={t.href} href={t.href} className={on ? "on" : undefined} aria-current={on ? "page" : undefined} title={t.hint}>
             {t.label}

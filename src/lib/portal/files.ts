@@ -19,6 +19,7 @@ export async function recordUpload(input: {
   key: string;
   name: string;
   category?: DocumentDoc["category"];
+  projectId?: ObjectId;
   sharedWithClient: boolean;
   by: Actor;
 }): Promise<{ doc: DocumentDoc } | { error: string }> {
@@ -45,6 +46,7 @@ export async function recordUpload(input: {
         uploadedBy: input.by,
         createdAt: new Date(),
         ...(input.category ? { category: input.category } : {}),
+        ...(input.projectId ? { projectId: input.projectId } : {}),
       },
     },
     { upsert: true },

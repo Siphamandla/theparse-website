@@ -11,14 +11,16 @@ export const dynamic = "force-dynamic";
 export default async function PortalDocuments() {
   const { org } = await requireMember();
   const c = await collections();
-  const [docs, submission] = await Promise.all([
+  const [docs, submission, projects] = await Promise.all([
     c.documents.find({ orgId: org._id, sharedWithClient: true, ...generalDocs }).sort({ createdAt: -1 }).limit(200).toArray(),
     c.submissions.findOne({ orgId: org._id }, { sort: { createdAt: -1 }, projection: { attachments: 1, createdAt: 1 } }),
+    c.projects.find({ orgId: org._id }).project<{ _id: import("mongodb").ObjectId; name: string }>({ name: 1 }).toArray(),
   ]);
+  const projectName = (id?: import("mongodb").ObjectId) => (id ? projects.find((p) => p._id.equals(id))?.name : undefined);
 
   // theParse's shared files first (newest first), then what the client attached at sign-up.
   const files = [
-    ...docs.map((d) => ({ key: d.key, name: d.name, type: d.type, size: d.size, at: d.createdAt, from: "theParse" })),
+    ...docs.map((d) => ({ key: d.key, name: d.name, type: d.type, size: d.size, at: d.createdAt, from: projectName(d.projectId) ? `theParse · ${projectName(d.projectId)}` : "theParse" })),
     ...(submission?.attachments ?? []).map((a) => ({ key: a.key, name: a.name, type: a.type, size: a.size, at: submission!.createdAt, from: "You, at sign-up" })),
   ];
 

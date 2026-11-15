@@ -105,6 +105,24 @@ export type DocumentDoc = {
   createdAt: Date;
   /** Files behind a contract or invoice. Absent = a general document (Documents tab). */
   category?: "contract" | "invoice";
+  /** General documents can belong to a project; they still show in the Documents tab. */
+  projectId?: ObjectId;
+};
+
+export type ProjectStatus = "planning" | "in_progress" | "on_hold" | "completed" | "cancelled";
+
+/** Work theParse is doing for a client. Every project is visible in the client's portal. */
+export type ProjectDoc = {
+  _id: ObjectId;
+  orgId: ObjectId;
+  name: string;
+  description?: string;
+  status: ProjectStatus;
+  startDate?: Date;
+  dueDate?: Date;
+  createdBy: Actor;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 /** Who did something: a staff member or a client user. */
@@ -112,10 +130,15 @@ export type Actor = { userId: ObjectId; name: string; staff: boolean };
 
 export type ContractStatus = "awaiting_signature" | "signed" | "void";
 
-/** A contract sent to a client. Files live in `org_documents` (category "contract"). */
+/**
+ * A contract for one of a client's projects. Files live in `org_documents` (category "contract").
+ * `orgId` is always the project's client, kept on the contract so access checks stay simple.
+ */
 export type ContractDoc = {
   _id: ObjectId;
   orgId: ObjectId;
+  /** Required for new contracts; only contracts sent before projects existed lack it. */
+  projectId?: ObjectId;
   title: string;
   note?: string;
   status: ContractStatus;
@@ -174,6 +197,8 @@ export type InvoiceDoc = {
   payments?: Payment[];
   /** The accepted contract this invoice is billed under. */
   contractId?: ObjectId;
+  /** Always the contract's project (copied when the invoice is created or the contract is linked). */
+  projectId?: ObjectId;
   createdBy: Actor;
   createdAt: Date;
 };
@@ -218,6 +243,7 @@ export async function collections() {
     documents: d.collection<DocumentDoc>("org_documents"),
     contracts: d.collection<ContractDoc>("org_contracts"),
     invoices: d.collection<InvoiceDoc>("org_invoices"),
+    projects: d.collection<ProjectDoc>("org_projects"),
     audit: d.collection<AuditDoc>("audit_log"),
     leads: d.collection<LeadDoc>("contacts-us"),
   };
@@ -243,8 +269,12 @@ export function ensureIndexes() {
         c.documents.createIndex({ orgId: 1, createdAt: -1 }),
         c.documents.createIndex({ key: 1 }, { unique: true }),
         c.contracts.createIndex({ orgId: 1, sentAt: -1 }),
+        c.contracts.createIndex({ projectId: 1 }, { sparse: true }),
         c.invoices.createIndex({ orgId: 1, issuedAt: -1 }),
         c.invoices.createIndex({ number: 1 }),
+        c.invoices.createIndex({ projectId: 1 }, { sparse: true }),
+        c.projects.createIndex({ orgId: 1, createdAt: -1 }),
+        c.documents.createIndex({ projectId: 1 }, { sparse: true }),
       ]);
     })().catch((err) => {
       indexesReady = null;

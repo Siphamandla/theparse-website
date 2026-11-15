@@ -113,6 +113,18 @@ export const paymentMethodLabel = { eft: "EFT", card: "Card", cash: "Cash", othe
 export const contractStatusLabel = { awaiting_signature: "Awaiting acceptance", signed: "Accepted", void: "Cancelled" } as const;
 export const contractTone = { awaiting_signature: "warn", signed: "ok", void: "neutral" } as const;
 
+export const PROJECT_STATUSES = ["planning", "in_progress", "on_hold", "completed", "cancelled"] as const;
+export const projectStatusLabel = {
+  planning: "Planning",
+  in_progress: "In progress",
+  on_hold: "On hold",
+  completed: "Completed",
+  cancelled: "Cancelled",
+} as const;
+export const projectTone = { planning: "info", in_progress: "acc", on_hold: "warn", completed: "ok", cancelled: "neutral" } as const;
+/** Statuses that count as "active" on the client's summary. */
+export const ACTIVE_PROJECT_STATUSES = ["planning", "in_progress", "on_hold"] as const;
+
 /**
  * Company registration number, tidied: trimmed, single spaces, upper case.
  * Lenient on format (CIPC "2019/123456/07", or foreign numbers), strict on characters.
