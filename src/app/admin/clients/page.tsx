@@ -18,7 +18,7 @@ const tabs: { key: "all" | OrgStatus; label: string }[] = [
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-export default async function ClientsPage({ searchParams }: { searchParams: { status?: string; q?: string } }) {
+export default async function ClientsPage({ searchParams }: { searchParams: { status?: string; q?: string; deleted?: string } }) {
   const status = tabs.some((t) => t.key === searchParams.status) ? (searchParams.status as (typeof tabs)[number]["key"]) : "all";
   const q = (searchParams.q ?? "").trim().slice(0, 80);
   const c = await collections();
@@ -55,6 +55,9 @@ export default async function ClientsPage({ searchParams }: { searchParams: { st
         </div>
         <Link className="pt-btn sm" href="/admin/invites/new">+ Invite client</Link>
       </div>
+      {searchParams.deleted ? (
+        <div className="pt-alert success" role="status">{searchParams.deleted.slice(0, 160)} was deleted.</div>
+      ) : null}
 
       <section className="pt-dt">
         <TableToolbar

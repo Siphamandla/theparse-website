@@ -42,9 +42,9 @@ export default async function PortalAppLayout({ children }: { children: React.Re
         {
           items: [
             { label: "Summary", href: "/portal" },
-            ...(hasSubmission ? [{ label: "Onboarding request", href: "/portal#onboarding" }] : []),
-            { label: "Projects", href: "/portal#projects" },
-            { label: "Team", href: "/portal#team" },
+            ...(hasSubmission ? [{ label: "Onboarding request", href: "/portal?view=onboarding" }] : []),
+            { label: "Projects", href: "/portal?view=projects" },
+            { label: "Team", href: "/portal?view=team" },
           ],
         },
       ],

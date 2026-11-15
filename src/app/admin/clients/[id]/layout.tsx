@@ -7,12 +7,13 @@ import { generalDocs } from "@/lib/portal/files";
 import { formatDate, initials } from "@/lib/portal/format";
 import { archiveOrg, markReviewed, restoreOrg } from "../../actions";
 import { getClient } from "./data";
+import DeleteClientButton from "./DeleteClientButton";
 
 export default async function ClientLayout({ children, params }: { children: React.ReactNode; params: { id: string } }) {
   const org = await getClient(params.id);
   const orgId = org._id.toString();
   const c = await collections();
-  const [docs, submission, people, notes, contracts, awaiting, invoices, unpaid] = await Promise.all([
+  const [docs, submission, people, notes, contracts, awaiting, invoices, unpaid, allContracts, allInvoices] = await Promise.all([
     c.documents.countDocuments({ orgId: org._id, ...generalDocs }),
     c.submissions.findOne({ orgId: org._id }, { projection: { attachments: 1 }, sort: { createdAt: -1 } }),
     c.memberships.countDocuments({ orgId: org._id }),
@@ -21,8 +22,19 @@ export default async function ClientLayout({ children, params }: { children: Rea
     c.contracts.countDocuments({ orgId: org._id, status: "awaiting_signature" }),
     c.invoices.countDocuments({ orgId: org._id, status: { $ne: "void" } }),
     c.invoices.countDocuments({ orgId: org._id, status: "unpaid" }),
+    c.contracts.countDocuments({ orgId: org._id }),
+    c.invoices.countDocuments({ orgId: org._id }),
   ]);
   const base = `/admin/clients/${orgId}`;
+  const n = (count: number, one: string, many = `${one}s`) => (count ? `${count} ${count === 1 ? one : many}` : null);
+  const deleteSummary = [
+    n(people, "team member"),
+    n(docs + (submission?.attachments.length ?? 0), "document"),
+    n(allContracts, "contract"),
+    n(allInvoices, "invoice"),
+    n(notes, "note"),
+    submission ? "The onboarding request" : null,
+  ].filter((s): s is string => Boolean(s));
 
   return (
     <>
@@ -45,6 +57,7 @@ export default async function ClientLayout({ children, params }: { children: Rea
             <ActionButton action={archiveOrg} id={orgId} label="Archive" className="pt-ghost" confirm={`Archive ${org.name}? Their people will lose portal access.`} />
           )}
           {org.status === "needs_review" ? <ActionButton action={markReviewed} id={orgId} label="Mark as reviewed" className="pt-btn sm" /> : null}
+          <DeleteClientButton orgId={orgId} orgName={org.name} summary={deleteSummary} />
         </div>
       </div>
 

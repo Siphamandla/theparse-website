@@ -1,17 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import type { ObjectId } from "mongodb";
+import getMongoClient from "@/lib/mongodb";
 import { fail, ok, type ActionResult } from "@/lib/portal/action-result";
 import { audit } from "@/lib/portal/audit";
-import { INVITE_DAY_OPTIONS, INVITE_DAYS_DEFAULT } from "@/lib/portal/config";
-import { recordUpload } from "@/lib/portal/files";
-import { collections, toObjectId, type OrgStatus } from "@/lib/portal/db";
+import { adminEmails, INVITE_DAY_OPTIONS, INVITE_DAYS_DEFAULT } from "@/lib/portal/config";
+import { orgFolder, recordUpload } from "@/lib/portal/files";
+import { collections, db, toObjectId, type OrgStatus } from "@/lib/portal/db";
 import { sendContractEmail, sendInvoiceEmail } from "@/lib/portal/email";
 import { siteUrl } from "@/lib/portal/config";
 import { formatMoney, isEmail, isKnownService, normaliseEmail, normaliseRegNumber, parseAmountToCents } from "@/lib/portal/format";
 import { checkTeamEmails, createClientInvite, createTeamInvite, resendInvite, revokeInvite } from "@/lib/portal/invites";
 import { requireStaff } from "@/lib/portal/session";
-import { deleteObject } from "@/lib/portal/storage";
+import { deleteObject, deleteObjects, listKeys, storageConfigured } from "@/lib/portal/storage";
 
 /** Every admin action re-checks that the caller is theParse staff. */
 async function staff() {
@@ -96,6 +99,113 @@ export async function archiveOrg(_prev: ActionResult, formData: FormData) {
 }
 export async function restoreOrg(_prev: ActionResult, formData: FormData) {
   return setOrgStatus(formData, "active", "org.restored");
+}
+
+/**
+ * Permanently deletes a client: the organisation and everything attached to it (team,
+ * invites, onboarding request, notes, documents, contracts, invoices and their stored files).
+ * People who belong only to this client also lose their portal account; anyone who is also
+ * in another client, or is theParse staff, keeps theirs. The audit log is kept.
+ *
+ * The admin must type the company name; it is checked again here, not just in the browser.
+ */
+export async function deleteOrg(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { actor } = await staff();
+  const id = toObjectId(formData.get("id"));
+  if (!id) return fail("Client not found.");
+  const c = await collections();
+  const org = await c.orgs.findOne({ _id: id });
+  if (!org) return fail("This client has already been deleted.");
+  if (String(formData.get("confirmName") ?? "").trim() !== org.name.trim()) {
+    return fail(`Type ${org.name} exactly to confirm.`);
+  }
+
+  // Payment records are financial records: deleteInvoice refuses them too.
+  const paidInvoices = await c.invoices.countDocuments({ orgId: id, "payments.0": { $exists: true } });
+  if (paidInvoices) {
+    return fail(
+      `${paidInvoices} invoice${paidInvoices === 1 ? " has" : "s have"} payments recorded, and payment records must be kept. Archive this client instead.`,
+    );
+  }
+
+  const [memberships, submissions, documents, contracts, invoices] = await Promise.all([
+    c.memberships.find({ orgId: id }).toArray(),
+    c.submissions.find({ orgId: id }).toArray(),
+    c.documents.find({ orgId: id }).project<{ key: string }>({ key: 1 }).toArray(),
+    c.contracts.find({ orgId: id }).project<{ fileKey?: string; signedFileKey?: string }>({ fileKey: 1, signedFileKey: 1 }).toArray(),
+    c.invoices.find({ orgId: id }).project<{ fileKey?: string }>({ fileKey: 1 }).toArray(),
+  ]);
+  const inviteIds = submissions.map((s) => s.inviteId);
+
+  // Accounts to remove: members of this client who aren't in any other client and aren't staff.
+  const memberIds = memberships.map((m) => m.userId);
+  const inOtherOrgs: ObjectId[] = await c.memberships.distinct("userId", { userId: { $in: memberIds }, orgId: { $ne: id } });
+  const staffEmails = adminEmails();
+  const removable = (await c.users.find({ _id: { $in: memberIds } }).toArray()).filter(
+    (u) => !inOtherOrgs.some((o) => o.equals(u._id)) && u.role !== "admin" && !staffEmails.includes(u.email.toLowerCase()),
+  );
+  const removableIds = removable.map((u) => u._id);
+  const removableEmails = removable.map((u) => u.email.toLowerCase());
+
+  // 1. Stored files first. If this fails, the database is untouched and the delete can simply be retried.
+  const keys = new Set<string>(
+    [
+      ...documents.map((d) => d.key),
+      ...contracts.flatMap((k) => [k.fileKey, k.signedFileKey]),
+      ...invoices.map((i) => i.fileKey),
+      ...submissions.flatMap((s) => s.attachments.map((a) => a.key)),
+    ].filter((k): k is string => Boolean(k)),
+  );
+  try {
+    if (storageConfigured()) {
+      // Also catches uploads that started but were never recorded.
+      const prefixes = [orgFolder(id), ...inviteIds.map((i) => `onboarding/${i.toString()}/`)];
+      for (const p of prefixes) for (const k of await listKeys(p)) keys.add(k);
+      await deleteObjects(Array.from(keys));
+    } else if (keys.size) {
+      return fail("File storage isn't configured, so this client's files can't be deleted. Nothing was deleted.");
+    }
+  } catch (err) {
+    console.error("❌ [Portal] Could not delete client files", err);
+    return fail("Couldn't delete the client's files from storage. Nothing else was deleted. Try again.");
+  }
+
+  // 2. Database records, all or nothing.
+  const d = await db();
+  const session = (await getMongoClient()).startSession();
+  try {
+    await session.withTransaction(async () => {
+      const o = { session };
+      await c.orgs.deleteOne({ _id: id }, o);
+      await c.memberships.deleteMany({ orgId: id }, o);
+      await c.invites.deleteMany({ $or: [{ orgId: id }, { _id: { $in: inviteIds } }] }, o);
+      await c.submissions.deleteMany({ orgId: id }, o);
+      await c.notes.deleteMany({ orgId: id }, o);
+      await c.documents.deleteMany({ orgId: id }, o);
+      await c.contracts.deleteMany({ orgId: id }, o);
+      await c.invoices.deleteMany({ orgId: id }, o);
+      if (removableIds.length) {
+        await c.sessions.deleteMany({ userId: { $in: removableIds } }, o);
+        await d.collection("accounts").deleteMany({ userId: { $in: removableIds } }, o);
+        await d.collection("verification_tokens").deleteMany({ identifier: { $in: removableEmails } }, o);
+        await c.users.deleteMany({ _id: { $in: removableIds } }, o);
+      }
+    });
+  } catch (err) {
+    console.error("❌ [Portal] Could not delete client records", err);
+    return fail("The files were deleted, but the client's records couldn't be. Try again.");
+  } finally {
+    await session.endSession();
+  }
+
+  await audit({
+    orgId: id,
+    actor,
+    action: "org.deleted",
+    detail: `${org.name} · ${removable.length} account${removable.length === 1 ? "" : "s"} and ${keys.size} file${keys.size === 1 ? "" : "s"} removed`,
+  });
+  revalidatePath("/admin", "layout");
+  redirect(`/admin/clients?deleted=${encodeURIComponent(org.name)}`);
 }
 
 export async function addNote(_prev: ActionResult, formData: FormData): Promise<ActionResult> {

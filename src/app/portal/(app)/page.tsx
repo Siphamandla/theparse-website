@@ -8,7 +8,7 @@ import { canManageTeam, requireMember } from "@/lib/portal/session";
 export const metadata: Metadata = { title: "Overview" };
 export const dynamic = "force-dynamic";
 
-export default async function PortalOverview({ searchParams }: { searchParams: { welcome?: string } }) {
+export default async function PortalOverview({ searchParams }: { searchParams: { welcome?: string; view?: string } }) {
   const { user, membership, org } = await requireMember();
   const c = await collections();
 
@@ -23,11 +23,92 @@ export default async function PortalOverview({ searchParams }: { searchParams: {
   const reviewed = org.status === "active";
   const firstName = (user.name || "").split(" ")[0] || "there";
 
+  const view = ["onboarding", "projects", "team"].includes(searchParams.view ?? "") ? searchParams.view : "summary";
+
   const steps = [
     { label: "Details submitted", done: Boolean(submission) || reviewed },
     { label: "theParse reviews your request and schedules a scoping call", done: reviewed },
     { label: "Your proposal and project are shared here", done: false },
   ];
+
+  const onboardingCard = submission ? (
+    <section className="pt-card" id="onboarding">
+      <div className="pt-between">
+        <h2 className="pt-h2">Your onboarding request</h2>
+        <span className={`pt-pill ${reviewed ? "ok" : "warn"}`}>{reviewed ? "Reviewed" : "Under review"}</span>
+      </div>
+      <div className="pt-chips">
+        {submission.services.map((s) => <span key={s} className="pt-chip">{serviceLabel(s)}</span>)}
+      </div>
+      <p className="pt-quote">{submission.message}</p>
+      {submission.attachments.length ? (
+        <Link className="pt-link" style={{ fontSize: 14 }} href="/portal/documents">
+          {submission.attachments.length} file{submission.attachments.length === 1 ? "" : "s"} you attached · view in Documents →
+        </Link>
+      ) : null}
+      <span className="pt-muted" style={{ fontSize: 13 }}>Submitted {formatDate(submission.createdAt)}</span>
+      <ol style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+        {steps.map((s, i) => (
+          <li key={s.label} className="pt-row" style={{ flexWrap: "nowrap", fontSize: 14 }}>
+            <span className={`pt-pill ${s.done ? "ok" : "neutral"}`} style={{ width: 26, justifyContent: "center", padding: 0 }}>
+              {s.done ? "✓" : i + 1}
+              <span className="pt-sr">{s.done ? " (done)" : ""}</span>
+            </span>
+            <span className={s.done ? "" : "pt-muted"}>{s.label}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ) : (
+    <section className="pt-card"><div className="pt-empty">You haven&apos;t submitted an onboarding request yet.</div></section>
+  );
+
+  const projectsBlock = (
+    <>
+      <h2 className="pt-h2" id="projects">Projects</h2>
+      <div className="pt-empty">Your projects will appear here once theParse has set them up. We&apos;ll email you when they&apos;re live.</div>
+    </>
+  );
+
+  const teamBlock = (
+    <>
+      <h2 className="pt-h2" id="team" style={view === "summary" ? { marginTop: 8 } : undefined}>Team</h2>
+      <div className="pt-list">
+        {members.map((m) => {
+          const u = users.find((x) => x._id.equals(m.userId));
+          return (
+            <div key={m._id.toString()} className="pt-item">
+              <span className="pt-avatar">{initials(u?.name || u?.email || "")}</span>
+              <span className="pt-item-main">{u?.name || u?.email}</span>
+              <span className="pt-muted" style={{ fontSize: 12 }}>{roleLabel[m.role]}</span>
+            </div>
+          );
+        })}
+        {pendingInvites.map((i) => (
+          <div key={i._id.toString()} className="pt-item">
+            <span className="pt-avatar">{initials(i.name || i.email)}</span>
+            <span className="pt-item-main">{i.name || i.email}</span>
+            <span className="pt-muted" style={{ fontSize: 12 }}>Invite pending</span>
+          </div>
+        ))}
+      </div>
+      {canManageTeam(membership.role) ? <Link className="pt-link" href="/portal/team">Manage team →</Link> : null}
+    </>
+  );
+
+  if (view !== "summary") {
+    const title = view === "onboarding" ? "Onboarding request" : view === "projects" ? "Projects" : "Team";
+    return (
+      <>
+        <div className="pt-head">
+          <div>
+            <h1 className="pt-h1">{title}</h1>
+          </div>
+        </div>
+        {view === "onboarding" ? onboardingCard : <section className="pt-card">{view === "projects" ? projectsBlock : teamBlock}</section>}
+      </>
+    );
+  }
 
   return (
     <>
@@ -49,64 +130,13 @@ export default async function PortalOverview({ searchParams }: { searchParams: {
       </div>
 
       <div className="pt-grid">
-        {submission ? (
-          <section className="pt-card" id="onboarding">
-            <div className="pt-between">
-              <h2 className="pt-h2">Your onboarding request</h2>
-              <span className={`pt-pill ${reviewed ? "ok" : "warn"}`}>{reviewed ? "Reviewed" : "Under review"}</span>
-            </div>
-            <div className="pt-chips">
-              {submission.services.map((s) => <span key={s} className="pt-chip">{serviceLabel(s)}</span>)}
-            </div>
-            <p className="pt-quote">{submission.message}</p>
-            {submission.attachments.length ? (
-              <Link className="pt-link" style={{ fontSize: 14 }} href="/portal/documents">
-                {submission.attachments.length} file{submission.attachments.length === 1 ? "" : "s"} you attached · view in Documents →
-              </Link>
-            ) : null}
-            <span className="pt-muted" style={{ fontSize: 13 }}>Submitted {formatDate(submission.createdAt)}</span>
-            <ol style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-              {steps.map((s, i) => (
-                <li key={s.label} className="pt-row" style={{ flexWrap: "nowrap", fontSize: 14 }}>
-                  <span className={`pt-pill ${s.done ? "ok" : "neutral"}`} style={{ width: 26, justifyContent: "center", padding: 0 }}>
-                    {s.done ? "✓" : i + 1}
-                    <span className="pt-sr">{s.done ? " (done)" : ""}</span>
-                  </span>
-                  <span className={s.done ? "" : "pt-muted"}>{s.label}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
+        {submission ? onboardingCard : null}
 
         <section className="pt-card">
-          <h2 className="pt-h2" id="projects">Projects</h2>
-          <div className="pt-empty">Your projects will appear here once theParse has set them up. We&apos;ll email you when they&apos;re live.</div>
-
-          <h2 className="pt-h2" id="team" style={{ marginTop: 8 }}>Team</h2>
-          <div className="pt-list">
-            {members.map((m) => {
-              const u = users.find((x) => x._id.equals(m.userId));
-              return (
-                <div key={m._id.toString()} className="pt-item">
-                  <span className="pt-avatar">{initials(u?.name || u?.email || "")}</span>
-                  <span className="pt-item-main">{u?.name || u?.email}</span>
-                  <span className="pt-muted" style={{ fontSize: 12 }}>{roleLabel[m.role]}</span>
-                </div>
-              );
-            })}
-            {pendingInvites.map((i) => (
-              <div key={i._id.toString()} className="pt-item">
-                <span className="pt-avatar">{initials(i.name || i.email)}</span>
-                <span className="pt-item-main">{i.name || i.email}</span>
-                <span className="pt-muted" style={{ fontSize: 12 }}>Invite pending</span>
-              </div>
-            ))}
-          </div>
-          {canManageTeam(membership.role) ? <Link className="pt-link" href="/portal/team">Manage team →</Link> : null}
+          {projectsBlock}
+          {teamBlock}
         </section>
       </div>
-
     </>
   );
 }

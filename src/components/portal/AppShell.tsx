@@ -58,14 +58,14 @@ export default function AppShell(p: Props) {
     const u = resolve(l.href);
     return u.hash && u.pathname === pathname && u.hash === hash;
   });
-  // Only compare ?status= when this section's links are status filters.
-  const filters = links.some((l) => resolve(l.href).searchParams.has("status"));
+  // Only compare a query param (?status= filters, ?view= sub-views) when this section's links use it.
+  const filterKey = ["status", "view"].find((k) => links.some((l) => resolve(l.href).searchParams.has(k)));
   const isOn = (href: string) => {
     const u = resolve(href);
     if (u.pathname !== pathname) return false;
     if (u.hash) return u.hash === hash;
     if (anchorHit) return false;
-    return !filters || (u.searchParams.get("status") ?? "") === (params.get("status") ?? "");
+    return !filterKey || (u.searchParams.get(filterKey) ?? "") === (params.get(filterKey) ?? "");
   };
 
   return (

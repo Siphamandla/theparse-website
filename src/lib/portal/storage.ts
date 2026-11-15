@@ -1,5 +1,5 @@
 import "server-only";
-import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createHash } from "crypto";
 
@@ -75,6 +75,25 @@ export async function headObject(key: string) {
 /** Removes a stored object. Missing objects are not an error. */
 export async function deleteObject(key: string) {
   await s3().send(new DeleteObjectCommand({ Bucket: bucket(), Key: key }));
+}
+
+/** Every object key under a folder prefix (e.g. "orgs/<id>/"), following pagination. */
+export async function listKeys(prefix: string) {
+  const keys: string[] = [];
+  let ContinuationToken: string | undefined;
+  do {
+    const res = await s3().send(new ListObjectsV2Command({ Bucket: bucket(), Prefix: prefix, ContinuationToken }));
+    for (const o of res.Contents ?? []) if (o.Key) keys.push(o.Key);
+    ContinuationToken = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (ContinuationToken);
+  return keys;
+}
+
+/** Deletes many objects, a few at a time. Throws if any delete fails (missing objects are not a failure). */
+export async function deleteObjects(keys: string[], concurrency = 8) {
+  for (let i = 0; i < keys.length; i += concurrency) {
+    await Promise.all(keys.slice(i, i + concurrency).map((k) => deleteObject(k)));
+  }
 }
 
 /** SHA-256 (hex) of a stored object, read in a stream. Used as evidence of exactly which file was accepted. */
