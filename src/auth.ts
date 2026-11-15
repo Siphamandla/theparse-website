@@ -2,7 +2,7 @@ import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
-import clientPromise from "@/lib/mongodb";
+import getMongoClient from "@/lib/mongodb";
 import { adminEmails, DB_NAME, SESSION_MAX_AGE_SECONDS, siteUrl } from "@/lib/portal/config";
 import { collections } from "@/lib/portal/db";
 import { sendSignInEmail } from "@/lib/portal/email";
@@ -23,7 +23,7 @@ export const authProviders = { google: googleEnabled };
  * - Database sessions in MongoDB, so sessions can be revoked server-side.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: MongoDBAdapter(clientPromise, { databaseName: DB_NAME }),
+  adapter: MongoDBAdapter(getMongoClient, { databaseName: DB_NAME }),
   session: { strategy: "database", maxAge: SESSION_MAX_AGE_SECONDS },
   trustHost: true,
   useSecureCookies,

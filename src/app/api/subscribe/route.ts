@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb'; // MongoDB connection
+import getMongoClient from '@/lib/mongodb'; // MongoDB connection
 import { DB_NAME } from '@/lib/portal/config';
 import sendEmail from "@/lib/sendgrid"; // Email sending functionality
 import { socialLinksHtml, withSocialText } from "@/lib/email-social";
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email } = body; // Extract email from the request body
 
-    const client = await clientPromise;  // Await MongoDB client connection
+    const client = await getMongoClient();  // Await MongoDB client connection
     const db = client.db(DB_NAME);
     const collection = db.collection('subscribers');
 

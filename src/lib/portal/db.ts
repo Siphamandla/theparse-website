@@ -1,6 +1,6 @@
 import "server-only";
 import { ObjectId, type Collection } from "mongodb";
-import clientPromise from "@/lib/mongodb";
+import getMongoClient from "@/lib/mongodb";
 import { DB_NAME } from "./config";
 
 /* ------------------------------------------------------------------ types */
@@ -201,7 +201,7 @@ export type LeadDoc = {
 /* ------------------------------------------------------------ collections */
 
 export async function db() {
-  const client = await clientPromise;
+  const client = await getMongoClient();
   return client.db(DB_NAME);
 }
 

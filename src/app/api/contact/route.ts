@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import getMongoClient from "@/lib/mongodb";
 import { DB_NAME } from "@/lib/portal/config";
 import sendEmail from "@/lib/sendgrid";
 import { socialLinksHtml, withSocialText } from "@/lib/email-social";
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as ContactFormPayload;
   const { email, name, message, products } = body;
 
-    const client = await clientPromise;
+    const client = await getMongoClient();
   const db = client.db(DB_NAME);
   const collection = db.collection("contacts-us");
 
