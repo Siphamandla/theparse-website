@@ -107,16 +107,26 @@ export async function sendTeamInviteEmail(opts: {
   return sendEmail({ to: opts.to, subject: `Join ${opts.orgName} on the theParse client portal`, htmlContent: html, plainTextContent: text });
 }
 
-export async function sendSignInEmail(to: string, url: string) {
+/** The sign-in email: a one-time code to type in, and the same sign-in as a link. */
+export async function sendSignInEmail(to: string, url: string, code: string, codeMinutes: number) {
+  const spaced = `${code.slice(0, 3)} ${code.slice(3)}`;
   const html = layout(
     "Sign in to the theParse portal",
-    [button(url, "Sign in"), small("This link works once and expires in 24 hours. If you didn't ask to sign in, ignore this email.")].join(""),
+    [
+      p("Enter this code on the sign-in page:"),
+      `<div style="margin:0 0 20px;padding:18px;border-radius:12px;background:#F7F8FC;border:1px solid #E3E8EF;text-align:center;font-family:'Courier New',Courier,monospace;font-size:32px;font-weight:bold;letter-spacing:8px;color:#121723">${esc(spaced)}</div>`,
+      small(`The code expires in ${codeMinutes} minutes.`),
+      p("Or sign in with one click:"),
+      button(url, "Sign in"),
+      small("The code and the link work once. Using either one cancels the other. The link expires in 24 hours. If you didn't ask to sign in, ignore this email. Never share this code with anyone."),
+    ].join(""),
   );
   const res = await sendEmail({
     to,
-    subject: "Your theParse portal sign-in link",
+    // The code in the subject means it can be read from the inbox notification.
+    subject: `${code} is your theParse sign-in code`,
     htmlContent: html,
-    plainTextContent: `Sign in to the theParse portal: ${url}\n\nThis link expires in 24 hours.`,
+    plainTextContent: `Your theParse sign-in code: ${code}\n\nIt expires in ${codeMinutes} minutes.\n\nOr sign in with this link: ${url}\n\nThe code and the link work once. Never share this code with anyone.`,
   });
   if (!res.success) throw new Error(res.message);
 }

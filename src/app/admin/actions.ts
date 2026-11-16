@@ -189,6 +189,7 @@ export async function deleteOrg(_prev: ActionResult, formData: FormData): Promis
         await c.sessions.deleteMany({ userId: { $in: removableIds } }, o);
         await d.collection("accounts").deleteMany({ userId: { $in: removableIds } }, o);
         await d.collection("verification_tokens").deleteMany({ identifier: { $in: removableEmails } }, o);
+        await d.collection("signin_codes").deleteMany({ email: { $in: removableEmails } }, o);
         await c.users.deleteMany({ _id: { $in: removableIds } }, o);
       }
     });

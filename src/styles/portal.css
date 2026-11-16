@@ -437,3 +437,6 @@ a.pt-stat-link:hover{border-color:var(--primary)}
 
 /* Payment-terms note under an invoice table heading */
 .pt-terms{margin:0;padding:10px 20px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);background:var(--surface-2)}
+
+/* Sign-in: one-time code field */
+.pt-code-input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:22px;letter-spacing:.3em;text-align:center}

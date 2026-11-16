@@ -28,7 +28,7 @@ export default function SignInForm({ next }: { next?: string }) {
         <label className="pt-label" htmlFor="email">Work email</label>
         <input className="pt-input" id="email" name="email" type="email" autoComplete="email" placeholder="you@company.com" required autoFocus />
       </div>
-      <SubmitButton pendingLabel="Sending…">Email me a sign-in link</SubmitButton>
+      <SubmitButton pendingLabel="Sending…">Email me a sign-in code</SubmitButton>
     </form>
   );
 }

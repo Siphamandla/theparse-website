@@ -15,8 +15,8 @@ const errors: Record<string, string> = {
   NoAccount: "There's no portal account for that address. The portal is invite-only, so ask your theParse contact for an invite.",
   AccessDenied: "There's no portal account for that address. The portal is invite-only, so ask your theParse contact for an invite.",
   NoOrganisation: "Your account isn't linked to a client organisation any more. Contact info@theparse.co.za for help.",
-  Verification: "That sign-in link has expired or was already used. Request a new one below.",
-  OAuthAccountNotLinked: "That Google account can't be used here. Sign in with an email link instead.",
+  Verification: "That sign-in link has expired or was already used (signing in with the code also cancels the link). Request a new one below.",
+  OAuthAccountNotLinked: "That Google account can't be used here. Sign in with an email code instead.",
 };
 
 const features = [
@@ -74,7 +74,7 @@ function BrandPanel() {
           <rect x="5" y="11" width="14" height="10" rx="2" />
           <path d="M8 11V7a4 4 0 0 1 8 0v4" />
         </svg>
-        Single-use sign-in links · Your data is handled under POPIA
+        Single-use sign-in codes and links · Your data is handled under POPIA
       </p>
     </section>
   );
@@ -97,7 +97,7 @@ export default async function SignInPage({ searchParams }: { searchParams: { sen
             <>
               <div>
                 <h1 className="pt-h1">Sign in</h1>
-                <p className="pt-sub">We&apos;ll email you a secure link. There&apos;s no password to remember.</p>
+                <p className="pt-sub">We&apos;ll email you a one-time code and a sign-in link. There&apos;s no password to remember.</p>
               </div>
               {error ? <div className="pt-alert error" role="alert">{error}</div> : null}
               <SignInForm next={searchParams.next} />

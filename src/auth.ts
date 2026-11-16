@@ -6,6 +6,7 @@ import getMongoClient from "@/lib/mongodb";
 import { adminEmails, DB_NAME, SESSION_MAX_AGE_SECONDS, siteUrl } from "@/lib/portal/config";
 import { collections } from "@/lib/portal/db";
 import { sendSignInEmail } from "@/lib/portal/email";
+import { clearSignInCode, CODE_MINUTES, issueSignInCode } from "@/lib/portal/signin-codes";
 
 /** Both Auth.js and the onboarding auto sign-in must agree on the cookie name. */
 export const useSecureCookies = siteUrl().startsWith("https://");
@@ -17,7 +18,8 @@ export const authProviders = { google: googleEnabled };
 /**
  * Client portal authentication (Auth.js v5).
  *
- * - Sign-in by emailed magic link (sent through Resend), plus Google if configured.
+ * - Sign-in by email (sent through Resend): a magic link, or the 6-digit code in the same
+ *   email (verified by signInWithCode, not Auth.js). Plus Google if configured.
  * - Invite-only: an address can sign in only if it already has a portal account
  *   (created when an invite is accepted) or is listed in PORTAL_ADMIN_EMAILS.
  * - Database sessions in MongoDB, so sessions can be revoked server-side.
@@ -31,7 +33,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Resend({
       apiKey: process.env.RESEND_API_KEY,
       from: process.env.RESEND_FROM_EMAIL,
-      sendVerificationRequest: ({ identifier, url }) => sendSignInEmail(identifier, url),
+      // One email carries both: the link, and a code for /portal/signin (see signin-codes.ts).
+      sendVerificationRequest: async ({ identifier, url }) => sendSignInEmail(identifier, url, await issueSignInCode(identifier), CODE_MINUTES),
     }),
     ...(googleEnabled ? [Google({ allowDangerousEmailAccountLinking: true })] : []),
   ],
@@ -39,6 +42,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/portal/signin",
     verifyRequest: "/portal/signin?sent=1",
     error: "/portal/signin",
+  },
+  events: {
+    // Signing in with the link makes the emailed code useless too.
+    async signIn({ user }) {
+      const email = user.email?.trim().toLowerCase();
+      if (email) await clearSignInCode(email).catch(() => {});
+    },
   },
   callbacks: {
     async signIn({ user }) {
