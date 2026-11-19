@@ -8,6 +8,13 @@ import { useEffect, useState } from "react";
 import { navLinks } from "@/data/site";
 import Icon, { Arrow } from "@/components/ui/Icon";
 
+/** The sparkle on featured menu links (AI). Decorative: the link text says where it goes. */
+const Sparkle = () => (
+  <svg className="spark" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path fill="currentColor" d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" />
+  </svg>
+);
+
 const isActive = (pathname: string, path: string) =>
   path === "/" ? pathname === "/" : pathname.startsWith(path);
 
@@ -52,10 +59,16 @@ export default function Header() {
               <Link
                 key={l.path}
                 href={l.path}
-                className={`${isActive(pathname, l.path) ? "active" : ""} ${l.badge ? "ai-link" : ""}`}
+                className={`${isActive(pathname, l.path) ? "active" : ""} ${l.featured ? "nav-featured" : ""}`}
               >
-                {l.title}
-                {l.badge && <i>{l.badge}</i>}
+                {l.featured ? (
+                  <>
+                    <Sparkle />
+                    <span className="t">{l.title}</span>
+                  </>
+                ) : (
+                  l.title
+                )}
               </Link>
             ))}
           </nav>
@@ -89,8 +102,9 @@ export default function Header() {
 
       <div className={`mobile-menu ${open ? "open" : ""}`} aria-hidden={!open}>
         {navLinks.map((l) => (
-          <Link key={l.path} href={l.path} className={isActive(pathname, l.path) ? "active" : ""}>
-            {l.title}
+          <Link key={l.path} href={l.path} className={`${isActive(pathname, l.path) ? "active" : ""} ${l.featured ? "nav-featured" : ""}`}>
+            {l.featured ? <Sparkle /> : null}
+            <span className="t">{l.title}</span>
           </Link>
         ))}
         <Link href="/portal/signin">Client login</Link>

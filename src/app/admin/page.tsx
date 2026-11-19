@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ActionButton from "@/components/portal/ActionButton";
+import ExpandDialog from "@/components/portal/ExpandDialog";
 import { collections } from "@/lib/portal/db";
 import { balanceCents, formatDate, formatDateTime, formatMoney, invoiceDisplayStatus } from "@/lib/portal/format";
 import { requireStaff } from "@/lib/portal/session";
@@ -49,6 +50,9 @@ const actionText: Record<string, string> = {
 };
 
 const DAY = 86_400_000;
+/** Recent activity: the card shows the latest few; "Expand" shows up to the larger number. */
+const ACTIVITY_CARD = 30;
+const ACTIVITY_EXPANDED = 100;
 
 /** Start of the current month in South African time (UTC+2, no daylight saving). */
 function monthStartSAST(now: Date) {
@@ -72,7 +76,7 @@ export default async function AdminOverview() {
     c.invites.find({ status: "rerequested" }).sort({ rerequestedAt: -1 }).limit(10).toArray(),
     c.audit.find({ action: "invite.team.sent", "actor.staff": false, at: { $gt: weekAgo } }).sort({ at: -1 }).limit(10).toArray(),
     c.leads.countDocuments({ status: { $nin: ["invited", "archived"] } }),
-    c.audit.find({ action: { $nin: ["file.downloaded", "file.viewed"] } }).sort({ at: -1 }).limit(12).toArray(),
+    c.audit.find({ action: { $nin: ["file.downloaded", "file.viewed"] } }).sort({ at: -1 }).limit(ACTIVITY_EXPANDED).toArray(),
     c.contracts.find({ status: "awaiting_signature" }).project<{ _id: unknown; orgId: never; title: string; sentAt: Date }>({ orgId: 1, title: 1, sentAt: 1 }).sort({ sentAt: 1 }).toArray(),
     c.contracts.countDocuments({ status: "signed", signedAt: { $gte: monthStart } }),
     c.invoices
@@ -104,6 +108,16 @@ export default async function AdminOverview() {
     reviewOrgs.length + rerequested.length + clientTeamAdds.length + (newLeads ? 1 : 0) + Math.min(overdueInv.length, 5) + Math.min(staleContracts.length, 5);
   const days = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
 
+
+  const activityItem = (a: (typeof activity)[number]) => (
+    <div key={a._id!.toString()} className="pt-item" style={{ alignItems: "flex-start" }}>
+      <div className="pt-item-main">
+        <b style={{ fontWeight: 600 }}>{a.actor.name}</b> {actionText[a.action] ?? a.action} {a.detail}
+        {orgName(a.orgId) ? <small>{orgName(a.orgId)}</small> : null}
+      </div>
+      <span className="pt-muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>{formatDateTime(a.at)}</span>
+    </div>
+  );
   return (
     <>
       <div className="pt-head">
@@ -216,18 +230,21 @@ export default async function AdminOverview() {
         </section>
 
         <section className="pt-card" id="activity">
-          <h2 className="pt-h2">Recent activity</h2>
+          <div className="pt-between">
+            <h2 className="pt-h2">Recent activity</h2>
+            {activity.length ? (
+              <ExpandDialog
+                title="Recent activity"
+                subtitle={`The latest ${activity.length} events across all clients, newest first. File views and downloads are left out.`}
+              >
+                <div className="pt-list">{activity.map(activityItem)}</div>
+              </ExpandDialog>
+            ) : null}
+          </div>
           {activity.length === 0 ? <div className="pt-empty">No activity yet.</div> : null}
-          <div className="pt-list">
-            {activity.map((a) => (
-              <div key={a._id!.toString()} className="pt-item" style={{ alignItems: "flex-start" }}>
-                <div className="pt-item-main">
-                  <b style={{ fontWeight: 600 }}>{a.actor.name}</b> {actionText[a.action] ?? a.action} {a.detail}
-                  {orgName(a.orgId) ? <small>{orgName(a.orgId)}</small> : null}
-                </div>
-                <span className="pt-muted" style={{ fontSize: 12, whiteSpace: "nowrap" }}>{formatDateTime(a.at)}</span>
-              </div>
-            ))}
+          {/* Scrolls inside the card, so a busy day doesn't stretch the whole page. */}
+          <div className="pt-list pt-feed" role="region" aria-label="Recent activity" tabIndex={0}>
+            {activity.slice(0, ACTIVITY_CARD).map(activityItem)}
           </div>
         </section>
       </div>

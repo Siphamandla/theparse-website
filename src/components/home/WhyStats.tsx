@@ -52,8 +52,8 @@ export function Why() {
   );
 }
 
-/** theParse has been building software since 2013. */
-export const FOUNDED_YEAR = 2013;
+/** theParse has been building software since 2015. */
+export const FOUNDED_YEAR = 2015;
 
 // Evaluated in the browser (this is a client component and the counter only animates
 // client-side), so the value stays current even though pages are statically generated.

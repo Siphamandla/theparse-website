@@ -1,8 +1,9 @@
-export const navLinks = [
+/** `featured` gives the link its own look in the menu (gradient outline + sparkle), used for AI. */
+export const navLinks: { title: string; path: string; featured?: boolean }[] = [
   { title: "Home", path: "/" },
   { title: "Services", path: "/services" },
   { title: "Automation", path: "/automation" },
-  { title: "AI", path: "/ai", badge: "New" },
+  { title: "AI", path: "/ai", featured: true },
   { title: "About", path: "/about" },
   { title: "Policies", path: "/policies" },
   { title: "Contact", path: "/contact" },

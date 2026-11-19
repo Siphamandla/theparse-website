@@ -440,3 +440,18 @@ a.pt-stat-link:hover{border-color:var(--primary)}
 
 /* Sign-in: one-time code field */
 .pt-code-input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:22px;letter-spacing:.3em;text-align:center}
+
+/* Admin dashboard: Recent activity scrolls inside its card instead of lengthening the page */
+.pt-feed{max-height:min(460px,60vh);overflow-y:auto;overscroll-behavior:contain;padding-right:6px;margin-right:-6px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.pt-feed:focus-visible{outline:2px solid var(--primary);outline-offset:4px;border-radius:8px}
+
+/* Expand button + modal for long dashboard lists */
+.pt-expand-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:color .15s,border-color .15s}
+.pt-expand-btn:hover{color:var(--text);border-color:var(--primary)}
+.pt-expand-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.pt-modal{width:min(820px,calc(100vw - 32px));max-height:min(86vh,900px);margin:auto;padding:0;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--text);box-shadow:0 30px 80px -20px rgba(0,0,0,.5);overflow:hidden;white-space:normal;text-align:left}
+.pt-modal[open]{display:flex;flex-direction:column}
+.pt-modal::backdrop{background:rgba(10,13,20,.6);backdrop-filter:blur(2px)}
+.pt-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.pt-modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:6px 20px 16px}
+@media(max-width:600px){.pt-modal{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0}}

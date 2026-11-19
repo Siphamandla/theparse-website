@@ -3,7 +3,7 @@ import { Arrow, IconBox } from "@/components/ui/Icon";
 import NetworkViz from "@/components/ui/NetworkViz";
 
 const small = [
-  { n: "02", icon: "rocket", title: "Crafted for startups", text: "Agile, scalable solutions designed to grow with your business.", cls: "b-b d1" },
+  { n: "02", icon: "trend", title: "Built for every stage", text: "Agile, scalable solutions for startups, growing SMEs and established enterprises.", cls: "b-b d1" },
   { n: "03", icon: "code", title: "Fullstack development", text: "High-performance applications that work flawlessly across every platform.", cls: "b-c" },
   { n: "04", icon: "pen", title: "High-quality design", text: "Intuitive interfaces where form and function create a lasting impact.", cls: "b-d d1" },
   { n: "05", icon: "grid", title: "Fully customisable", text: "Unique features, tailored integrations and workflows aligned to how you work.", cls: "b-e d2" },
